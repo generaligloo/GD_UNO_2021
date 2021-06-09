@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.IO;
 using System.Windows.Forms;
 
 namespace GD_UNO_2021
@@ -433,6 +434,8 @@ namespace GD_UNO_2021
 
         private void mains_aff()
         {
+            string LocaDom = System.AppDomain.CurrentDomain.BaseDirectory;
+            string FileName = string.Format("{0}Resources\\uno_assets_2d\\PNGs\\small\\", Path.GetFullPath(Path.Combine(LocaDom, @"..\..\")));
             this.Panel_UNO.Controls.Clear();
             Images_j1.Clear();
             Images_j2.Clear();
@@ -442,7 +445,7 @@ namespace GD_UNO_2021
             {
                 Name = "PB_Pioche",
                 Location = new Point(PB_pioche.Location.X, PB_pioche.Location.Y),
-                Image = Image.FromFile("F:\\COURS\\POO\\GD_UNO_2021\\Resources\\uno_assets_2d\\PNGs\\small\\DOS.png"),
+                Image = Image.FromFile(FileName + "DOS.png"),
                 Width = 100,
                 Height = 140,
                 SizeMode = PictureBoxSizeMode.StretchImage,
@@ -455,7 +458,7 @@ namespace GD_UNO_2021
             {
                 Name = "PB_Defausse",
                 Location = new Point(PB_defausse.Location.X, PB_defausse.Location.Y),
-                Image = Image.FromFile("F:\\COURS\\POO\\GD_UNO_2021\\Resources\\uno_assets_2d\\PNGs\\small\\"+partie.Defausse[0].DisplayValue+".png"),
+                Image = Image.FromFile(FileName + partie.Defausse[0].DisplayValue+".png"),
                 Width = 100,
                 Height = 140,
                 SizeMode = PictureBoxSizeMode.StretchImage,
@@ -472,7 +475,7 @@ namespace GD_UNO_2021
                     {
                         Name = "PB_" + jou,
                         Location = new Point(30 + (60 * jou), 490),
-                        Image = Image.FromFile("F:\\COURS\\POO\\GD_UNO_2021\\Resources\\uno_assets_2d\\PNGs\\small\\" + mainj1.DisplayValue + ".png"),
+                        Image = Image.FromFile(FileName + mainj1.DisplayValue + ".png"),
                         Width = PB_pioche.Width,
                         Height = PB_pioche.Height,
                         SizeMode = PictureBoxSizeMode.StretchImage,
@@ -493,7 +496,7 @@ namespace GD_UNO_2021
                     {
                         Name = "PB2_" + jou,
                         Location = new Point(30 + (60 * jou), 0),
-                        Image = Image.FromFile("F:\\COURS\\POO\\GD_UNO_2021\\Resources\\uno_assets_2d\\PNGs\\small\\DOS.png"),
+                        Image = Image.FromFile(FileName + "DOS.png"),
                         Width = PB_pioche.Width,
                         Height = PB_pioche.Height,
                         SizeMode = PictureBoxSizeMode.StretchImage,
@@ -514,7 +517,10 @@ namespace GD_UNO_2021
                     {
                         Name = "PB_" + jou,
                         Location = new Point(30 + (60 * jou), 490),
-                        Image = Image.FromFile("F:\\COURS\\POO\\GD_UNO_2021\\Resources\\uno_assets_2d\\PNGs\\small\\DOS.png"),
+
+                        
+                        Image = Image.FromFile(FileName + "DOS.png"),
+                        
                         Width = PB_pioche.Width,
                         Height = PB_pioche.Height,
                         SizeMode = PictureBoxSizeMode.StretchImage,
@@ -534,7 +540,7 @@ namespace GD_UNO_2021
                     {
                         Name = "PB_" + jou,
                         Location = new Point(30 + (60 * jou), 0),
-                        Image = Image.FromFile("F:\\COURS\\POO\\GD_UNO_2021\\Resources\\uno_assets_2d\\PNGs\\small\\" + mainj2.DisplayValue + ".png"),
+                        Image = Image.FromFile(FileName + mainj2.DisplayValue + ".png"),
                         Width = PB_pioche.Width,
                         Height = PB_pioche.Height,
                         SizeMode = PictureBoxSizeMode.StretchImage,
