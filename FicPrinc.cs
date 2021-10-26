@@ -1,19 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
 using System.IO;
+using System.Windows.Forms;
 
 namespace GD_UNO_2021
 {
     public partial class FicPrinc : Form
     {
-        int i;
+        private int i;
+
         public FicPrinc()
         {
             InitializeComponent();
@@ -44,9 +39,9 @@ namespace GD_UNO_2021
                 {
                     string[] tab = lecture.Split('|');
                     if (tab[0] == "1")
-                       i = 1;
+                        i = 1;
                     else
-                       i = 0;
+                        i = 0;
                 }
                 while ((lecture = sr.ReadLine()) != "/")
                 {
@@ -57,7 +52,7 @@ namespace GD_UNO_2021
                 while ((lecture = sr.ReadLine()) != "/")
                 {
                     string[] tab = lecture.Split('|');
-                    Carte c = new Carte(tab[0], tab[1],int.Parse(tab[2]));
+                    Carte c = new Carte(tab[0], tab[1], int.Parse(tab[2]));
                     J1.Add(c);
                 }
                 while ((lecture = sr.ReadLine()) != "/")
@@ -73,10 +68,21 @@ namespace GD_UNO_2021
                     Pioche.Add(c);
                 }
                 sr.Close();
-                EcranTerrain CP = new EcranTerrain(i,J1,J2,Pioche,Defausse);
+                EcranTerrain CP = new EcranTerrain(i, J1, J2, Pioche, Defausse);
                 CP.ShowDialog();
             }
-            
+        }
+
+        private void B_serveur_Click(object sender, EventArgs e)
+        {
+            EcranServ Serv = new EcranServ();
+            Serv.ShowDialog();
+        }
+
+        private void B_joueur_Click(object sender, EventArgs e)
+        {
+            EcranTerrain_LAN TL = new EcranTerrain_LAN();
+            TL.ShowDialog();
         }
     }
 }

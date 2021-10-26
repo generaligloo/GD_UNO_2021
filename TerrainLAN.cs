@@ -2,13 +2,17 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
+using System.Net;
+using System.Net.NetworkInformation;
+using System.Net.Sockets;
+using System.Text;
+using System.Threading;
 using System.Windows.Forms;
 
 namespace GD_UNO_2021
 {
-    public partial class EcranTerrain : Form
+    public partial class EcranTerrain_LAN : Form
     {
-        private bool admin = false;
         public jeu partie = new jeu();
         public int i = 0;
         public int color_check = 0;
@@ -19,13 +23,16 @@ namespace GD_UNO_2021
         public bool uno2 = false;
         private List<PictureBox> Images_j1 = new List<PictureBox>();
         private List<PictureBox> Images_j2 = new List<PictureBox>();
+        private Socket _clientSocket;
+        private byte[] receivedBuf = new byte[1024];
 
-        public EcranTerrain()
+        public EcranTerrain_LAN()
         {
             InitializeComponent();
+            CheckForIllegalCrossThreadCalls = false;
         }
 
-        public EcranTerrain(int i_c, List<Carte> J1_c, List<Carte> J2_c, List<Carte> pioche_c, List<Carte> defausse_c)
+        public EcranTerrain_LAN(int i_c, List<Carte> J1_c, List<Carte> J2_c, List<Carte> pioche_c, List<Carte> defausse_c)
         {
             InitializeComponent();
             i = i_c;
@@ -38,7 +45,6 @@ namespace GD_UNO_2021
             LB_Deck.Visible = LB_defausse.Visible = LB_Player1.Visible = LB_Player2.Visible = B_jouer1.Visible = B_jouer2.Visible = B_piocher1.Visible = B_piocher2.Visible = false;
             B_jouer2.Enabled = false;
             B_piocher2.Enabled = false;
-            b_triche.Enabled = false;
             B_jouer1.Enabled = false;
             B_piocher1.Enabled = false;
             B_sauv.Enabled = false;
@@ -68,7 +74,6 @@ namespace GD_UNO_2021
         private void turn()
         {
             B_sauv.Enabled = true;
-            b_triche.Enabled = true;
             if (varpass)
             {
                 if (varpioche_2)
@@ -638,22 +643,6 @@ namespace GD_UNO_2021
             mains_aff();
         }
 
-        private void B_admin_Click(object sender, EventArgs e)
-        {
-            if (admin)
-            {
-                B_admin.Text = "Mode admin: OFF";
-                admin = false;
-                LB_Deck.Visible = LB_defausse.Visible = LB_Player1.Visible = LB_Player2.Visible = B_jouer1.Visible = B_jouer2.Visible = B_piocher1.Visible = B_piocher2.Visible = false;
-            }
-            else
-            {
-                B_admin.Text = "Mode admin: ON";
-                admin = true;
-                LB_Deck.Visible = LB_defausse.Visible = LB_Player1.Visible = LB_Player2.Visible = B_jouer1.Visible = B_jouer2.Visible = B_piocher1.Visible = B_piocher2.Visible = true;
-            }
-        }
-
         private void PB_pioche_Click(object sender, EventArgs e)
         {
             newgame();
@@ -731,5 +720,130 @@ namespace GD_UNO_2021
                 sw.Close();
             }
         }
+
+        #region connexion au serveur
+
+        private void B_connect_Click(object sender, EventArgs e)
+        {
+            if (TB_pseudo.Text.Length > 0)
+            {
+                _clientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                LoopConnect();
+            }
+            else
+            {
+                MessageBox.Show("Insérer un pseudo !");
+            }
+        }
+
+        private void LoopConnect()
+        {
+            _clientSocket.Blocking = false;
+            int attempts = 0;
+            while (!_clientSocket.Connected && attempts <= 20)
+            {
+                try
+                {
+                    Thread.Sleep(500);
+                    attempts++;
+                    IPAddress tmpIP = AdresseValide(TB_IP.Text);
+                    if (tmpIP != null)
+                        _clientSocket.Connect(tmpIP, 9000);
+                }
+                catch (SocketException)
+                {
+                    RTB_chat.AppendText("\nConnection attempts: " + attempts.ToString());
+                    RTB_chat.Focus();
+                }
+            }
+            if (attempts <= 20)
+            {
+                RTB_chat.AppendText("\nConnected!");
+                _clientSocket.BeginReceive(receivedBuf, 0, receivedBuf.Length, SocketFlags.None, new AsyncCallback(ReceiveData), _clientSocket);
+                byte[] buffer = Encoding.Unicode.GetBytes("@@" + TB_pseudo.Text);
+                _clientSocket.Send(buffer);
+                B_connect.Enabled = false;
+            }
+            else
+            {
+                RTB_chat.AppendText("\nServeur introuvale (+20 essais de connexion)!");
+            }
+        }
+
+        private IPAddress AdresseValide(string nomPC)
+        {
+            IPAddress ipReponse = null;
+            if (nomPC.Length > 0)
+            {
+                IPAddress[] ipsMachine = Dns.GetHostEntry(nomPC).AddressList;
+                for (int i = 0; i < ipsMachine.Length; i++)
+                {
+                    Ping ping = new Ping();
+                    PingReply pingReponse = ping.Send(ipsMachine[i]);
+                    if (pingReponse.Status == IPStatus.Success)
+                        if (ipsMachine[i].AddressFamily == AddressFamily.InterNetwork)
+                        {
+                            ipReponse = ipsMachine[i];
+                            break;
+                        }
+                }
+            }
+            return ipReponse;
+        }
+
+        #endregion connexion au serveur
+
+        #region gestion des paquets
+
+        private void ReceiveData(IAsyncResult ar)
+        {
+            Socket socket = (Socket)ar.AsyncState;
+            int received;
+            try
+            {
+                received = socket.EndReceive(ar);
+            }
+            catch (Exception)
+            {
+                return;
+            }
+            if (received != 0)
+            {
+                byte[] dataBuf = new byte[received];
+                Array.Copy(receivedBuf, dataBuf, received);
+                string text = Encoding.Unicode.GetString(dataBuf);
+                if (text == "@end")
+                {
+                    RTB_chat.AppendText("\nFin de connexion serveur...");
+                    Disconnect();
+                }
+                else
+                {
+                    RTB_chat.AppendText("\nServeur Admin: " + text);
+                    _clientSocket.BeginReceive(receivedBuf, 0, receivedBuf.Length, SocketFlags.None, new AsyncCallback(ReceiveData), _clientSocket);
+                }
+            }
+        }
+
+        private void Disconnect()
+        {
+            _clientSocket.BeginDisconnect(false, new AsyncCallback(SurDemandeDeconnexion), _clientSocket);
+        }
+
+        private void SurDemandeDeconnexion(IAsyncResult iAR)
+        {
+            Socket Tmp = (Socket)iAR.AsyncState;
+            Tmp.EndDisconnect(iAR);
+            B_connect.Enabled = true;
+        }
+        private void B_disconnect_Click(object sender, EventArgs e)
+        {
+            Disconnect();
+            RTB_chat.AppendText("\nDisconnected!");
+        }
+
+        #endregion gestion des paquets
+
+
     }
 }

@@ -1,11 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace GD_UNO_2021
@@ -13,6 +6,7 @@ namespace GD_UNO_2021
     public partial class choix_carte_triche : Form
     {
         private EcranTerrain terrain = null;
+
         public choix_carte_triche(jeu partie, Form parent)
         {
             InitializeComponent();
@@ -25,12 +19,11 @@ namespace GD_UNO_2021
 
         private void choix_carte_triche_Load(object sender, EventArgs e)
         {
-
         }
 
         private void b_pioche_triche_Click(object sender, EventArgs e)
         {
-            if(LB_Deck.SelectedIndex == -1)
+            if (LB_Deck.SelectedIndex == -1)
             {
                 MessageBox.Show("Aucune carte sélectionnée !");
             }

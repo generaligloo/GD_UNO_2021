@@ -28,7 +28,7 @@ namespace GD_UNO_2021
                             case VALEUR.SEPT:
                             case VALEUR.HUIT:
                             case VALEUR.NEUF:
-                                
+
                                 paquet.Add(new Carte()
                                 {
                                     Carte_couleur = col,

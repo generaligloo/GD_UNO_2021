@@ -17,6 +17,7 @@ namespace GD_UNO_2021
             Joueurs[0].Main = J1_c;
             Joueurs[1].Main = J2_c;
         }
+
         public jeu()
         {
             Joueurs = new List<Joueur>();

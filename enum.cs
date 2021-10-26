@@ -27,6 +27,4 @@
         PLUS_QUATRE,
         JOKER
     }
-
 }
-  
