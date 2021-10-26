@@ -40,9 +40,12 @@ namespace GD_UNO_2021
             this.B_piocher2 = new System.Windows.Forms.Button();
             this.B_NP = new System.Windows.Forms.Button();
             this.Panel_UNO = new System.Windows.Forms.Panel();
+            this.B_admin = new System.Windows.Forms.Button();
+            this.b_triche = new System.Windows.Forms.Button();
             this.PB_defausse = new System.Windows.Forms.PictureBox();
             this.PB_pioche = new System.Windows.Forms.PictureBox();
-            this.B_admin = new System.Windows.Forms.Button();
+            this.B_sauv = new System.Windows.Forms.Button();
+            this.saveFileDialog = new System.Windows.Forms.SaveFileDialog();
             this.Panel_UNO.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.PB_defausse)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.PB_pioche)).BeginInit();
@@ -142,6 +145,26 @@ namespace GD_UNO_2021
             this.Panel_UNO.Size = new System.Drawing.Size(876, 637);
             this.Panel_UNO.TabIndex = 9;
             // 
+            // B_admin
+            // 
+            this.B_admin.Location = new System.Drawing.Point(12, 285);
+            this.B_admin.Name = "B_admin";
+            this.B_admin.Size = new System.Drawing.Size(107, 23);
+            this.B_admin.TabIndex = 10;
+            this.B_admin.Text = "Mode admin:";
+            this.B_admin.UseVisualStyleBackColor = true;
+            this.B_admin.Click += new System.EventHandler(this.B_admin_Click);
+            // 
+            // b_triche
+            // 
+            this.b_triche.Location = new System.Drawing.Point(12, 314);
+            this.b_triche.Name = "b_triche";
+            this.b_triche.Size = new System.Drawing.Size(107, 23);
+            this.b_triche.TabIndex = 6;
+            this.b_triche.Text = "Tricher";
+            this.b_triche.UseVisualStyleBackColor = true;
+            this.b_triche.Click += new System.EventHandler(this.b_triche_Click);
+            // 
             // PB_defausse
             // 
             this.PB_defausse.Image = global::GD_UNO_2021.Properties.Resources.DOS_DIFF;
@@ -163,15 +186,19 @@ namespace GD_UNO_2021
             this.PB_pioche.TabStop = false;
             this.PB_pioche.Click += new System.EventHandler(this.PB_pioche_Click);
             // 
-            // B_admin
+            // B_sauv
             // 
-            this.B_admin.Location = new System.Drawing.Point(12, 285);
-            this.B_admin.Name = "B_admin";
-            this.B_admin.Size = new System.Drawing.Size(107, 23);
-            this.B_admin.TabIndex = 10;
-            this.B_admin.Text = "Mode admin:";
-            this.B_admin.UseVisualStyleBackColor = true;
-            this.B_admin.Click += new System.EventHandler(this.B_admin_Click);
+            this.B_sauv.Location = new System.Drawing.Point(14, 343);
+            this.B_sauv.Name = "B_sauv";
+            this.B_sauv.Size = new System.Drawing.Size(105, 23);
+            this.B_sauv.TabIndex = 11;
+            this.B_sauv.Text = "Sauvegarder";
+            this.B_sauv.UseVisualStyleBackColor = true;
+            this.B_sauv.Click += new System.EventHandler(this.B_sauv_Click);
+            // 
+            // saveFileDialog
+            // 
+            this.saveFileDialog.Filter = "Fichier uno|*.uno";
             // 
             // EcranTerrain
             // 
@@ -179,6 +206,8 @@ namespace GD_UNO_2021
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.DarkGreen;
             this.ClientSize = new System.Drawing.Size(1230, 637);
+            this.Controls.Add(this.B_sauv);
+            this.Controls.Add(this.b_triche);
             this.Controls.Add(this.B_admin);
             this.Controls.Add(this.Panel_UNO);
             this.Controls.Add(this.B_NP);
@@ -220,6 +249,9 @@ namespace GD_UNO_2021
         private System.Windows.Forms.PictureBox PB_pioche;
         private System.Windows.Forms.PictureBox PB_defausse;
         private System.Windows.Forms.Button B_admin;
+        private System.Windows.Forms.Button b_triche;
+        private System.Windows.Forms.Button B_sauv;
+        private System.Windows.Forms.SaveFileDialog saveFileDialog;
     }
 }
 

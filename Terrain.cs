@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Windows.Forms;
+using System.Linq;
 
 namespace GD_UNO_2021
 {
@@ -25,17 +26,48 @@ namespace GD_UNO_2021
             InitializeComponent();
         }
 
+        public EcranTerrain(int i_c, List<Carte>J1_c, List<Carte> J2_c, List<Carte> pioche_c, List<Carte> defausse_c)
+        {
+            InitializeComponent();
+            i = i_c;
+            partie.charger(J1_c, J2_c, pioche_c, defausse_c);
+            turn_charge();
+        }
+
         private void Terrain_Load(object sender, EventArgs e)
         {
             LB_Deck.Visible = LB_defausse.Visible = LB_Player1.Visible = LB_Player2.Visible = B_jouer1.Visible = B_jouer2.Visible = B_piocher1.Visible = B_piocher2.Visible = false;
             B_jouer2.Enabled = false;
             B_piocher2.Enabled = false;
+            b_triche.Enabled = false;
             B_jouer1.Enabled = false;
             B_piocher1.Enabled = false;
+            B_sauv.Enabled = false;
         }
-
+        private void turn_charge()
+        {
+            if (i == 0)
+            {
+                B_jouer1.Enabled = true;
+                B_piocher1.Enabled = true;
+                B_jouer2.Enabled = false;
+                B_piocher2.Enabled = false;
+            }
+            else
+            {
+                B_jouer1.Enabled = false;
+                B_piocher1.Enabled = false;
+                B_jouer2.Enabled = true;
+                B_piocher2.Enabled = true;
+            }
+            refresh_aff();
+            mains_aff();
+            B_sauv.Enabled = true;
+        }
         private void turn()
         {
+            B_sauv.Enabled = true;
+            b_triche.Enabled = true;
             if (varpass)
             {
                 if (varpioche_2)
@@ -163,16 +195,19 @@ namespace GD_UNO_2021
                                     partie.Defausse[0].Carte_couleur = COULEUR.BLEU;
                                     color_check = 1;
                                     break;
+
                                 case DialogResult.Cancel:
                                     MessageBox.Show("Rouge !");
                                     partie.Defausse[0].Carte_couleur = COULEUR.ROUGE;
                                     color_check = 1;
                                     break;
+
                                 case DialogResult.Abort:
                                     MessageBox.Show("jaune !");
                                     partie.Defausse[0].Carte_couleur = COULEUR.JAUNE;
                                     color_check = 1;
                                     break;
+
                                 case DialogResult.Retry:
                                     MessageBox.Show("Vert !");
                                     partie.Defausse[0].Carte_couleur = COULEUR.VERT;
@@ -184,6 +219,7 @@ namespace GD_UNO_2021
                     }
                     else if (carteJoue.Carte_valeur == VALEUR.JOKER)
                     {
+                        varpass = true;
                         do
                         {
                             choix_couleur couleur_choix = new choix_couleur();
@@ -196,16 +232,19 @@ namespace GD_UNO_2021
                                     partie.Defausse[0].Carte_couleur = COULEUR.BLEU;
                                     color_check = 1;
                                     break;
+
                                 case DialogResult.Cancel:
                                     MessageBox.Show("Rouge !");
                                     partie.Defausse[0].Carte_couleur = COULEUR.ROUGE;
                                     color_check = 1;
                                     break;
+
                                 case DialogResult.Abort:
                                     MessageBox.Show("jaune !");
                                     partie.Defausse[0].Carte_couleur = COULEUR.JAUNE;
                                     color_check = 1;
                                     break;
+
                                 case DialogResult.Retry:
                                     MessageBox.Show("Vert !");
                                     partie.Defausse[0].Carte_couleur = COULEUR.VERT;
@@ -305,16 +344,19 @@ namespace GD_UNO_2021
                                     partie.Defausse[0].Carte_couleur = COULEUR.BLEU;
                                     color_check = 1;
                                     break;
+
                                 case DialogResult.Cancel:
                                     MessageBox.Show("Rouge !");
                                     partie.Defausse[0].Carte_couleur = COULEUR.ROUGE;
                                     color_check = 1;
                                     break;
+
                                 case DialogResult.Abort:
                                     MessageBox.Show("jaune !");
                                     partie.Defausse[0].Carte_couleur = COULEUR.JAUNE;
                                     color_check = 1;
                                     break;
+
                                 case DialogResult.Retry:
                                     MessageBox.Show("Vert !");
                                     partie.Defausse[0].Carte_couleur = COULEUR.VERT;
@@ -326,6 +368,7 @@ namespace GD_UNO_2021
                     }
                     else if (carteJoue.Carte_valeur == VALEUR.JOKER)
                     {
+                        varpass = true;
                         do
                         {
                             choix_couleur couleur_choix = new choix_couleur();
@@ -338,16 +381,19 @@ namespace GD_UNO_2021
                                     partie.Defausse[0].Carte_couleur = COULEUR.BLEU;
                                     color_check = 1;
                                     break;
+
                                 case DialogResult.Cancel:
                                     MessageBox.Show("Rouge !");
                                     partie.Defausse[0].Carte_couleur = COULEUR.ROUGE;
                                     color_check = 1;
                                     break;
+
                                 case DialogResult.Abort:
                                     MessageBox.Show("jaune !");
                                     partie.Defausse[0].Carte_couleur = COULEUR.JAUNE;
                                     color_check = 1;
                                     break;
+
                                 case DialogResult.Retry:
                                     MessageBox.Show("Vert !");
                                     partie.Defausse[0].Carte_couleur = COULEUR.VERT;
@@ -404,6 +450,7 @@ namespace GD_UNO_2021
         private void B_NP_Click(object sender, EventArgs e)
         {
             i = 0;
+            B_sauv.Enabled = true;
             newgame();
             turn();
         }
@@ -458,7 +505,7 @@ namespace GD_UNO_2021
             {
                 Name = "PB_Defausse",
                 Location = new Point(PB_defausse.Location.X, PB_defausse.Location.Y),
-                Image = Image.FromFile(FileName + partie.Defausse[0].DisplayValue+".png"),
+                Image = Image.FromFile(FileName + partie.Defausse[0].DisplayValue + ".png"),
                 Width = 100,
                 Height = 140,
                 SizeMode = PictureBoxSizeMode.StretchImage,
@@ -487,8 +534,6 @@ namespace GD_UNO_2021
                     jou++;
                 }
 
-                
-
                 jou = 0;
                 foreach (Carte mainj2 in partie.Joueurs[1].Main)
                 {
@@ -507,7 +552,7 @@ namespace GD_UNO_2021
                     this.Panel_UNO.Controls.Add(Images_j2[jou]);
                     jou++;
                 }
-            } 
+            }
             else
             {
                 int jou = 0;
@@ -518,9 +563,8 @@ namespace GD_UNO_2021
                         Name = "PB_" + jou,
                         Location = new Point(30 + (60 * jou), 490),
 
-                        
                         Image = Image.FromFile(FileName + "DOS.png"),
-                        
+
                         Width = PB_pioche.Width,
                         Height = PB_pioche.Height,
                         SizeMode = PictureBoxSizeMode.StretchImage,
@@ -530,8 +574,6 @@ namespace GD_UNO_2021
                     this.Panel_UNO.Controls.Add(Images_j1[jou]);
                     jou++;
                 }
-
-                
 
                 jou = 0;
                 foreach (Carte mainj2 in partie.Joueurs[1].Main)
@@ -576,7 +618,7 @@ namespace GD_UNO_2021
                     LB_Player1.SelectedIndex = int.Parse(tab[1]);
                     PB.Top -= 30;
                     DialogResult DG1 = MessageBox.Show("Vous souhaitez jouer le " + partie.Joueurs[0].Main[LB_Player1.SelectedIndex].Carte_valeur + " " + partie.Joueurs[0].Main[LB_Player1.SelectedIndex].Carte_couleur + "?", "choix", MessageBoxButtons.YesNo);
-                    if(DG1==DialogResult.Yes)
+                    if (DG1 == DialogResult.Yes)
                     {
                         B_jouer1_Click(null, null);
                     }
@@ -597,7 +639,7 @@ namespace GD_UNO_2021
 
         private void B_admin_Click(object sender, EventArgs e)
         {
-            if(admin)
+            if (admin)
             {
                 B_admin.Text = "Mode admin: OFF";
                 admin = false;
@@ -614,6 +656,79 @@ namespace GD_UNO_2021
         private void PB_pioche_Click(object sender, EventArgs e)
         {
             newgame();
+        }
+
+        private void b_triche_Click(object sender, EventArgs e)
+        {
+            choix_carte_triche carte_choix = new choix_carte_triche(partie, this);
+            carte_choix.ShowDialog();
+            if (carteText == "")
+            {
+                MessageBox.Show("Aucune carte sélectionnée !");
+            }
+            else
+            {
+                try
+                {
+                    int index = LB_Deck.Items.IndexOf(carteText);
+                    Carte cartePioche = partie.Pioche.paquet[index];
+                    partie.Joueurs[i].Main.Add(cartePioche);
+                    partie.Pioche.paquet.RemoveAt(index);
+                    refresh_aff();
+                    if (cartePioche.Carte_couleur == partie.Defausse[0].Carte_couleur || cartePioche.Carte_valeur == partie.Defausse[0].Carte_valeur || cartePioche.Carte_couleur == COULEUR.NOIR)
+                    {
+                        MessageBox.Show("Vous pouvez jouer à nouveau !");
+                    }
+                    else
+                    {
+                        MessageBox.Show("Vous ne pouvez pas jouer, passer votre tour !");
+                        i = 1 - i;
+                        turn();
+                    }
+                    mains_aff();
+                    carteText = "";
+                }
+                catch
+                {
+                    MessageBox.Show("Erreur !");
+                }
+            }
+        }
+
+        public string carteText
+        {
+            get; set;
+        }
+
+        private void B_sauv_Click(object sender, EventArgs e)
+        {
+            if (saveFileDialog.ShowDialog()== DialogResult.OK)
+            {
+                StreamWriter sw = new StreamWriter(saveFileDialog.FileName);
+                sw.WriteLine(i);
+                sw.WriteLine("/");
+                foreach(Carte c in partie.Defausse)
+                {
+                    sw.WriteLine(c.Carte_couleur + "|" + c.Carte_valeur + "|" + c.Carte_score);
+                }
+                sw.WriteLine("/");
+                foreach (Carte c in partie.Joueurs[0].Main)
+                {
+                    sw.WriteLine(c.Carte_couleur + "|" + c.Carte_valeur + "|" + c.Carte_score);
+                }
+                sw.WriteLine("/");
+                foreach (Carte c in partie.Joueurs[1].Main)
+                {
+                    sw.WriteLine(c.Carte_couleur + "|" + c.Carte_valeur + "|" + c.Carte_score);
+                }
+                sw.WriteLine("/");
+                foreach (Carte c in partie.Pioche.paquet)
+                {
+                    sw.WriteLine(c.Carte_couleur + "|" + c.Carte_valeur + "|" + c.Carte_score);
+                }
+                sw.WriteLine("/");
+                sw.Close();
+            }
         }
     }
 }

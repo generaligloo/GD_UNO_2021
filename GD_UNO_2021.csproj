@@ -47,6 +47,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Carte.cs" />
+    <Compile Include="choix_carte_triche.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="choix_carte_triche.Designer.cs">
+      <DependentUpon>choix_carte_triche.cs</DependentUpon>
+    </Compile>
     <Compile Include="choix_couleur.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -54,6 +60,12 @@
       <DependentUpon>choix_couleur.cs</DependentUpon>
     </Compile>
     <Compile Include="enum.cs" />
+    <Compile Include="FicPrinc.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FicPrinc.Designer.cs">
+      <DependentUpon>FicPrinc.cs</DependentUpon>
+    </Compile>
     <Compile Include="jeu.cs" />
     <Compile Include="Joueur.cs" />
     <Compile Include="Terrain.cs">
@@ -65,8 +77,14 @@
     <Compile Include="Paquet.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <EmbeddedResource Include="choix_carte_triche.resx">
+      <DependentUpon>choix_carte_triche.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="choix_couleur.resx">
       <DependentUpon>choix_couleur.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FicPrinc.resx">
+      <DependentUpon>FicPrinc.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>

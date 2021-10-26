@@ -13,7 +13,7 @@ namespace GD_UNO_2021
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new EcranTerrain());
+            Application.Run(new FicPrinc());
         }
     }
 }

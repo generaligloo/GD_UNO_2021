@@ -10,6 +10,13 @@ namespace GD_UNO_2021
         public List<Joueur> Joueurs { get; set; }
         public List<Carte> Defausse { get; set; }
 
+        public void charger(List<Carte> J1_c, List<Carte> J2_c, List<Carte> Pioche_c, List<Carte> Defausse_c)
+        {
+            Pioche.paquet = Pioche_c;
+            Defausse = Defausse_c;
+            Joueurs[0].Main = J1_c;
+            Joueurs[1].Main = J2_c;
+        }
         public jeu()
         {
             Joueurs = new List<Joueur>();
