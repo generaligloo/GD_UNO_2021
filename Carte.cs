@@ -1,5 +1,8 @@
-﻿namespace GD_UNO_2021
+﻿using System;
+
+namespace GD_UNO_2021
 {
+    [Serializable]
     public class Carte
     {
         public COULEUR Carte_couleur { get; set; }

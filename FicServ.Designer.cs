@@ -42,14 +42,18 @@ namespace GD_UNO_2021
             this.RTB_chat = new System.Windows.Forms.RichTextBox();
             this.B_rep_admin = new System.Windows.Forms.Button();
             this.TB_admin = new System.Windows.Forms.TextBox();
+            this.b_NG = new System.Windows.Forms.Button();
+            this.LB_deck = new System.Windows.Forms.ListBox();
+            this.b_verif = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // LB_console
             // 
             this.LB_console.FormattingEnabled = true;
+            this.LB_console.HorizontalScrollbar = true;
             this.LB_console.Location = new System.Drawing.Point(153, 113);
             this.LB_console.Name = "LB_console";
-            this.LB_console.Size = new System.Drawing.Size(267, 147);
+            this.LB_console.Size = new System.Drawing.Size(535, 147);
             this.LB_console.TabIndex = 0;
             // 
             // label1
@@ -158,11 +162,43 @@ namespace GD_UNO_2021
             this.TB_admin.Size = new System.Drawing.Size(339, 20);
             this.TB_admin.TabIndex = 13;
             // 
+            // b_NG
+            // 
+            this.b_NG.Enabled = false;
+            this.b_NG.Location = new System.Drawing.Point(426, 58);
+            this.b_NG.Name = "b_NG";
+            this.b_NG.Size = new System.Drawing.Size(267, 49);
+            this.b_NG.TabIndex = 14;
+            this.b_NG.Text = "Nouvelle partie";
+            this.b_NG.UseVisualStyleBackColor = true;
+            this.b_NG.Click += new System.EventHandler(this.b_NG_Click);
+            // 
+            // LB_deck
+            // 
+            this.LB_deck.FormattingEnabled = true;
+            this.LB_deck.Location = new System.Drawing.Point(426, 269);
+            this.LB_deck.Name = "LB_deck";
+            this.LB_deck.Size = new System.Drawing.Size(267, 134);
+            this.LB_deck.TabIndex = 15;
+            // 
+            // b_verif
+            // 
+            this.b_verif.Location = new System.Drawing.Point(426, 3);
+            this.b_verif.Name = "b_verif";
+            this.b_verif.Size = new System.Drawing.Size(267, 49);
+            this.b_verif.TabIndex = 16;
+            this.b_verif.Text = "Vérifier IP";
+            this.b_verif.UseVisualStyleBackColor = true;
+            this.b_verif.Click += new System.EventHandler(this.B_test_ip);
+            // 
             // EcranServ
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(429, 414);
+            this.ClientSize = new System.Drawing.Size(700, 414);
+            this.Controls.Add(this.b_verif);
+            this.Controls.Add(this.LB_deck);
+            this.Controls.Add(this.b_NG);
             this.Controls.Add(this.TB_admin);
             this.Controls.Add(this.B_rep_admin);
             this.Controls.Add(this.RTB_chat);
@@ -199,6 +235,9 @@ namespace GD_UNO_2021
         private System.Windows.Forms.RichTextBox RTB_chat;
         private System.Windows.Forms.Button B_rep_admin;
         private System.Windows.Forms.TextBox TB_admin;
+        private System.Windows.Forms.Button b_NG;
+        private System.Windows.Forms.ListBox LB_deck;
+        private System.Windows.Forms.Button b_verif;
     }
 }
 

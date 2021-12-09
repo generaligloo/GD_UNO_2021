@@ -30,17 +30,12 @@ namespace GD_UNO_2021
         private void InitializeComponent()
         {
             this.LB_Deck = new System.Windows.Forms.ListBox();
-            this.LB_Player2 = new System.Windows.Forms.ListBox();
-            this.LB_Player1 = new System.Windows.Forms.ListBox();
+            this.LB_MainAdverse = new System.Windows.Forms.ListBox();
+            this.LB_MainJoueur = new System.Windows.Forms.ListBox();
             this.LB_defausse = new System.Windows.Forms.ListBox();
-            this.B_jouer1 = new System.Windows.Forms.Button();
-            this.B_jouer2 = new System.Windows.Forms.Button();
-            this.B_piocher1 = new System.Windows.Forms.Button();
-            this.B_piocher2 = new System.Windows.Forms.Button();
-            this.Panel_UNO = new System.Windows.Forms.Panel();
+            this.Panel_UNO_LAN = new System.Windows.Forms.Panel();
             this.PB_defausse = new System.Windows.Forms.PictureBox();
             this.PB_pioche = new System.Windows.Forms.PictureBox();
-            this.B_sauv = new System.Windows.Forms.Button();
             this.saveFileDialog = new System.Windows.Forms.SaveFileDialog();
             this.TB_pseudo = new System.Windows.Forms.TextBox();
             this.L_nom = new System.Windows.Forms.Label();
@@ -49,7 +44,9 @@ namespace GD_UNO_2021
             this.TB_IP = new System.Windows.Forms.TextBox();
             this.RTB_chat = new System.Windows.Forms.RichTextBox();
             this.B_disconnect = new System.Windows.Forms.Button();
-            this.Panel_UNO.SuspendLayout();
+            this.lb_tour = new System.Windows.Forms.Label();
+            this.TB_tour = new System.Windows.Forms.TextBox();
+            this.Panel_UNO_LAN.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.PB_defausse)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.PB_pioche)).BeginInit();
             this.SuspendLayout();
@@ -61,22 +58,24 @@ namespace GD_UNO_2021
             this.LB_Deck.Name = "LB_Deck";
             this.LB_Deck.Size = new System.Drawing.Size(156, 134);
             this.LB_Deck.TabIndex = 0;
+            this.LB_Deck.Visible = false;
             // 
-            // LB_Player2
+            // LB_MainAdverse
             // 
-            this.LB_Player2.FormattingEnabled = true;
-            this.LB_Player2.Location = new System.Drawing.Point(176, 413);
-            this.LB_Player2.Name = "LB_Player2";
-            this.LB_Player2.Size = new System.Drawing.Size(156, 212);
-            this.LB_Player2.TabIndex = 1;
+            this.LB_MainAdverse.FormattingEnabled = true;
+            this.LB_MainAdverse.Location = new System.Drawing.Point(176, 413);
+            this.LB_MainAdverse.Name = "LB_MainAdverse";
+            this.LB_MainAdverse.Size = new System.Drawing.Size(156, 212);
+            this.LB_MainAdverse.TabIndex = 1;
+            this.LB_MainAdverse.Visible = false;
             // 
-            // LB_Player1
+            // LB_MainJoueur
             // 
-            this.LB_Player1.FormattingEnabled = true;
-            this.LB_Player1.Location = new System.Drawing.Point(12, 413);
-            this.LB_Player1.Name = "LB_Player1";
-            this.LB_Player1.Size = new System.Drawing.Size(158, 212);
-            this.LB_Player1.TabIndex = 2;
+            this.LB_MainJoueur.FormattingEnabled = true;
+            this.LB_MainJoueur.Location = new System.Drawing.Point(12, 413);
+            this.LB_MainJoueur.Name = "LB_MainJoueur";
+            this.LB_MainJoueur.Size = new System.Drawing.Size(158, 212);
+            this.LB_MainJoueur.TabIndex = 2;
             // 
             // LB_defausse
             // 
@@ -85,58 +84,19 @@ namespace GD_UNO_2021
             this.LB_defausse.Name = "LB_defausse";
             this.LB_defausse.Size = new System.Drawing.Size(158, 134);
             this.LB_defausse.TabIndex = 3;
+            this.LB_defausse.Visible = false;
             // 
-            // B_jouer1
+            // Panel_UNO_LAN
             // 
-            this.B_jouer1.Location = new System.Drawing.Point(14, 384);
-            this.B_jouer1.Name = "B_jouer1";
-            this.B_jouer1.Size = new System.Drawing.Size(75, 23);
-            this.B_jouer1.TabIndex = 4;
-            this.B_jouer1.Text = "Jouer";
-            this.B_jouer1.UseVisualStyleBackColor = true;
-            this.B_jouer1.Click += new System.EventHandler(this.B_jouer1_Click);
-            // 
-            // B_jouer2
-            // 
-            this.B_jouer2.Location = new System.Drawing.Point(176, 384);
-            this.B_jouer2.Name = "B_jouer2";
-            this.B_jouer2.Size = new System.Drawing.Size(75, 23);
-            this.B_jouer2.TabIndex = 5;
-            this.B_jouer2.Text = "Jouer";
-            this.B_jouer2.UseVisualStyleBackColor = true;
-            this.B_jouer2.Click += new System.EventHandler(this.B_jouer2_Click);
-            // 
-            // B_piocher1
-            // 
-            this.B_piocher1.Location = new System.Drawing.Point(95, 384);
-            this.B_piocher1.Name = "B_piocher1";
-            this.B_piocher1.Size = new System.Drawing.Size(75, 23);
-            this.B_piocher1.TabIndex = 6;
-            this.B_piocher1.Text = "Piocher";
-            this.B_piocher1.UseVisualStyleBackColor = true;
-            this.B_piocher1.Click += new System.EventHandler(this.B_piocher1_Click);
-            // 
-            // B_piocher2
-            // 
-            this.B_piocher2.Location = new System.Drawing.Point(257, 384);
-            this.B_piocher2.Name = "B_piocher2";
-            this.B_piocher2.Size = new System.Drawing.Size(75, 23);
-            this.B_piocher2.TabIndex = 7;
-            this.B_piocher2.Text = "Piocher";
-            this.B_piocher2.UseVisualStyleBackColor = true;
-            this.B_piocher2.Click += new System.EventHandler(this.B_piocher2_Click);
-            // 
-            // Panel_UNO
-            // 
-            this.Panel_UNO.BackColor = System.Drawing.Color.Green;
-            this.Panel_UNO.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
-            this.Panel_UNO.Controls.Add(this.PB_defausse);
-            this.Panel_UNO.Controls.Add(this.PB_pioche);
-            this.Panel_UNO.Dock = System.Windows.Forms.DockStyle.Right;
-            this.Panel_UNO.Location = new System.Drawing.Point(354, 0);
-            this.Panel_UNO.Name = "Panel_UNO";
-            this.Panel_UNO.Size = new System.Drawing.Size(876, 637);
-            this.Panel_UNO.TabIndex = 9;
+            this.Panel_UNO_LAN.BackColor = System.Drawing.Color.Green;
+            this.Panel_UNO_LAN.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
+            this.Panel_UNO_LAN.Controls.Add(this.PB_defausse);
+            this.Panel_UNO_LAN.Controls.Add(this.PB_pioche);
+            this.Panel_UNO_LAN.Dock = System.Windows.Forms.DockStyle.Right;
+            this.Panel_UNO_LAN.Location = new System.Drawing.Point(354, 0);
+            this.Panel_UNO_LAN.Name = "Panel_UNO_LAN";
+            this.Panel_UNO_LAN.Size = new System.Drawing.Size(876, 637);
+            this.Panel_UNO_LAN.TabIndex = 9;
             // 
             // PB_defausse
             // 
@@ -157,17 +117,6 @@ namespace GD_UNO_2021
             this.PB_pioche.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
             this.PB_pioche.TabIndex = 0;
             this.PB_pioche.TabStop = false;
-            this.PB_pioche.Click += new System.EventHandler(this.PB_pioche_Click);
-            // 
-            // B_sauv
-            // 
-            this.B_sauv.Location = new System.Drawing.Point(14, 355);
-            this.B_sauv.Name = "B_sauv";
-            this.B_sauv.Size = new System.Drawing.Size(318, 23);
-            this.B_sauv.TabIndex = 11;
-            this.B_sauv.Text = "Sauvegarder";
-            this.B_sauv.UseVisualStyleBackColor = true;
-            this.B_sauv.Click += new System.EventHandler(this.B_sauv_Click);
             // 
             // saveFileDialog
             // 
@@ -219,12 +168,14 @@ namespace GD_UNO_2021
             // 
             this.RTB_chat.Location = new System.Drawing.Point(12, 206);
             this.RTB_chat.Name = "RTB_chat";
+            this.RTB_chat.ReadOnly = true;
             this.RTB_chat.Size = new System.Drawing.Size(320, 143);
             this.RTB_chat.TabIndex = 17;
             this.RTB_chat.Text = "";
             // 
             // B_disconnect
             // 
+            this.B_disconnect.Enabled = false;
             this.B_disconnect.Location = new System.Drawing.Point(259, 178);
             this.B_disconnect.Name = "B_disconnect";
             this.B_disconnect.Size = new System.Drawing.Size(75, 23);
@@ -233,12 +184,31 @@ namespace GD_UNO_2021
             this.B_disconnect.UseVisualStyleBackColor = true;
             this.B_disconnect.Click += new System.EventHandler(this.B_disconnect_Click);
             // 
+            // lb_tour
+            // 
+            this.lb_tour.AutoSize = true;
+            this.lb_tour.Location = new System.Drawing.Point(9, 376);
+            this.lb_tour.Name = "lb_tour";
+            this.lb_tour.Size = new System.Drawing.Size(71, 13);
+            this.lb_tour.TabIndex = 19;
+            this.lb_tour.Text = "Votre tour ? : ";
+            // 
+            // TB_tour
+            // 
+            this.TB_tour.Location = new System.Drawing.Point(78, 373);
+            this.TB_tour.Name = "TB_tour";
+            this.TB_tour.ReadOnly = true;
+            this.TB_tour.Size = new System.Drawing.Size(254, 20);
+            this.TB_tour.TabIndex = 20;
+            // 
             // EcranTerrain_LAN
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.DarkGreen;
             this.ClientSize = new System.Drawing.Size(1230, 637);
+            this.Controls.Add(this.TB_tour);
+            this.Controls.Add(this.lb_tour);
             this.Controls.Add(this.B_disconnect);
             this.Controls.Add(this.RTB_chat);
             this.Controls.Add(this.label1);
@@ -246,15 +216,10 @@ namespace GD_UNO_2021
             this.Controls.Add(this.B_connect);
             this.Controls.Add(this.L_nom);
             this.Controls.Add(this.TB_pseudo);
-            this.Controls.Add(this.B_sauv);
-            this.Controls.Add(this.Panel_UNO);
-            this.Controls.Add(this.B_piocher2);
-            this.Controls.Add(this.B_piocher1);
-            this.Controls.Add(this.B_jouer2);
-            this.Controls.Add(this.B_jouer1);
+            this.Controls.Add(this.Panel_UNO_LAN);
             this.Controls.Add(this.LB_defausse);
-            this.Controls.Add(this.LB_Player1);
-            this.Controls.Add(this.LB_Player2);
+            this.Controls.Add(this.LB_MainJoueur);
+            this.Controls.Add(this.LB_MainAdverse);
             this.Controls.Add(this.LB_Deck);
             this.DoubleBuffered = true;
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
@@ -262,8 +227,8 @@ namespace GD_UNO_2021
             this.MinimizeBox = false;
             this.Name = "EcranTerrain_LAN";
             this.Text = "Terrain de jeu";
-            this.Load += new System.EventHandler(this.Terrain_Load);
-            this.Panel_UNO.ResumeLayout(false);
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.EcranTerrain_LAN_FormClosing);
+            this.Panel_UNO_LAN.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.PB_defausse)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.PB_pioche)).EndInit();
             this.ResumeLayout(false);
@@ -274,17 +239,12 @@ namespace GD_UNO_2021
         #endregion
 
         private System.Windows.Forms.ListBox LB_Deck;
-        private System.Windows.Forms.ListBox LB_Player2;
-        private System.Windows.Forms.ListBox LB_Player1;
+        private System.Windows.Forms.ListBox LB_MainAdverse;
+        private System.Windows.Forms.ListBox LB_MainJoueur;
         private System.Windows.Forms.ListBox LB_defausse;
-        private System.Windows.Forms.Button B_jouer1;
-        private System.Windows.Forms.Button B_jouer2;
-        private System.Windows.Forms.Button B_piocher1;
-        private System.Windows.Forms.Button B_piocher2;
-        private System.Windows.Forms.Panel Panel_UNO;
+        private System.Windows.Forms.Panel Panel_UNO_LAN;
         private System.Windows.Forms.PictureBox PB_pioche;
         private System.Windows.Forms.PictureBox PB_defausse;
-        private System.Windows.Forms.Button B_sauv;
         private System.Windows.Forms.SaveFileDialog saveFileDialog;
         private System.Windows.Forms.TextBox TB_pseudo;
         private System.Windows.Forms.Label L_nom;
@@ -293,6 +253,8 @@ namespace GD_UNO_2021
         private System.Windows.Forms.TextBox TB_IP;
         private System.Windows.Forms.RichTextBox RTB_chat;
         private System.Windows.Forms.Button B_disconnect;
+        private System.Windows.Forms.Label lb_tour;
+        private System.Windows.Forms.TextBox TB_tour;
     }
 }
 

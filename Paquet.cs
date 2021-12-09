@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 
 namespace GD_UNO_2021
 {
+    [Serializable]
     public class Paquet
     {
         public List<Carte> paquet;

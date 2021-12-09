@@ -5,7 +5,7 @@ using System.IO;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
-using System.Text;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.Threading;
 using System.Windows.Forms;
 
@@ -14,711 +14,25 @@ namespace GD_UNO_2021
     public partial class EcranTerrain_LAN : Form
     {
         public jeu partie = new jeu();
-        public int i = 0;
         public int color_check = 0;
-        public bool varpioche_2 = false;
-        public bool varpioche_4 = false;
-        public bool varpass = false;
-        public bool uno1 = false;
-        public bool uno2 = false;
-        private List<PictureBox> Images_j1 = new List<PictureBox>();
-        private List<PictureBox> Images_j2 = new List<PictureBox>();
-        private Socket _clientSocket;
+        public bool Bconnect = false;
+        public Paquet Paquet_jeu = new Paquet();
+        private List<PictureBox> Images_main = new List<PictureBox>();
+        private List<PictureBox> Images_adv = new List<PictureBox>();
+        private TcpClient _clientTCP;
+        private IPAddress _serveur;
         private byte[] receivedBuf = new byte[1024];
+        private string joueur;
+        private int QuiJoueTour;
+        private int aGagner = 0;
+        private int test = 1;
 
         public EcranTerrain_LAN()
         {
             InitializeComponent();
+            test = 1;
+            aGagner = 0;
             CheckForIllegalCrossThreadCalls = false;
-        }
-
-        public EcranTerrain_LAN(int i_c, List<Carte> J1_c, List<Carte> J2_c, List<Carte> pioche_c, List<Carte> defausse_c)
-        {
-            InitializeComponent();
-            i = i_c;
-            partie.charger(J1_c, J2_c, pioche_c, defausse_c);
-            turn_charge();
-        }
-
-        private void Terrain_Load(object sender, EventArgs e)
-        {
-            LB_Deck.Visible = LB_defausse.Visible = LB_Player1.Visible = LB_Player2.Visible = B_jouer1.Visible = B_jouer2.Visible = B_piocher1.Visible = B_piocher2.Visible = false;
-            B_jouer2.Enabled = false;
-            B_piocher2.Enabled = false;
-            B_jouer1.Enabled = false;
-            B_piocher1.Enabled = false;
-            B_sauv.Enabled = false;
-        }
-
-        private void turn_charge()
-        {
-            if (i == 0)
-            {
-                B_jouer1.Enabled = true;
-                B_piocher1.Enabled = true;
-                B_jouer2.Enabled = false;
-                B_piocher2.Enabled = false;
-            }
-            else
-            {
-                B_jouer1.Enabled = false;
-                B_piocher1.Enabled = false;
-                B_jouer2.Enabled = true;
-                B_piocher2.Enabled = true;
-            }
-            refresh_aff();
-            mains_aff();
-            B_sauv.Enabled = true;
-        }
-
-        private void turn()
-        {
-            B_sauv.Enabled = true;
-            if (varpass)
-            {
-                if (varpioche_2)
-                {
-                    MessageBox.Show("Le joueur adverse pioche 2 cartes");
-                    i = 1 - i;
-                    for (int j = 0; j < 2; j++)
-                    {
-                        Carte cartePioche = partie.Pioche.paquet[0];
-                        partie.Joueurs[i].Main.Insert(0, cartePioche);
-                        partie.Pioche.paquet.RemoveAt(0);
-                    }
-                    // i = 1 - i;
-                    varpioche_2 = !varpioche_2;
-                    MessageBox.Show("Le joueur adverse passe son tour");
-                    varpass = !varpass;
-                }
-                else if (varpioche_4)
-                {
-                    MessageBox.Show("Le joueur adverse pioche 4 cartes");
-                    i = 1 - i;
-                    for (int j = 0; j < 4; j++)
-                    {
-                        Carte cartePioche = partie.Pioche.paquet[0];
-                        partie.Joueurs[i].Main.Insert(0, cartePioche);
-                        partie.Pioche.paquet.RemoveAt(0);
-                    }
-                    //i = 1 - i;
-                    varpioche_4 = !varpioche_4;
-                    MessageBox.Show("Le joueur adverse passe son tour");
-                    varpass = !varpass;
-                }
-                else
-                {
-                    i = 1 - i;
-                    MessageBox.Show("Le joueur adverse passe son tour");
-                    varpass = !varpass;
-                }
-            }
-            if (partie.Pioche.paquet.Count < 4)
-            {
-                partie.Remelanger();
-                LB_Deck.Refresh();
-                LB_defausse.Refresh();
-                LB_Player1.Refresh();
-                LB_Player2.Refresh();
-                MessageBox.Show("Jeu remelangé !");
-            }
-            if (i == 0)
-            {
-                B_jouer1.Enabled = true;
-                B_piocher1.Enabled = true;
-                B_jouer2.Enabled = false;
-                B_piocher2.Enabled = false;
-            }
-            else
-            {
-                B_jouer1.Enabled = false;
-                B_piocher1.Enabled = false;
-                B_jouer2.Enabled = true;
-                B_piocher2.Enabled = true;
-            }
-            refresh_aff();
-            mains_aff();
-        }
-
-        private void newgame()
-        {
-            i = 0;
-            partie.refresh();
-            refresh_aff();
-            mains_aff();
-        }
-
-        private void win(int i)
-        {
-            i++;
-            MessageBox.Show("Le joueur " + i + " gagne la partie");
-            Close();
-        }
-
-        private void B_jouer1_Click(object sender, EventArgs e)
-        {
-            if (LB_Player1.SelectedItem != null)
-            {
-                Carte carteJoue = partie.Joueurs[0].Main[LB_Player1.SelectedIndex];
-                if (carteJoue.Carte_couleur == partie.Defausse[0].Carte_couleur || carteJoue.Carte_valeur == partie.Defausse[0].Carte_valeur || carteJoue.Carte_couleur == COULEUR.NOIR)
-                {
-                    partie.Defausse.Insert(0, carteJoue);
-                    partie.Joueurs[i].Main.RemoveAt(LB_Player1.SelectedIndex);
-                    refresh_aff();
-                    if (carteJoue.Carte_valeur == VALEUR.INVERS)
-                    {
-                        //i = 1 - i;
-                        varpass = true;
-                        turn();
-                    }
-                    else if (carteJoue.Carte_valeur == VALEUR.PASSE)
-                    {
-                        //i = 1 - i;
-                        varpass = true;
-                        turn();
-                    }
-                    else if (carteJoue.Carte_valeur == VALEUR.PLUS_DEUX)
-                    {
-                        //i = 1 - i;
-                        varpioche_2 = true;
-                        varpass = true;
-                        turn();
-                    }
-                    else if (carteJoue.Carte_valeur == VALEUR.PLUS_QUATRE)
-                    {
-                        //i = 1 - i;
-                        varpioche_4 = true;
-                        varpass = true;
-                        do
-                        {
-                            choix_couleur couleur_choix = new choix_couleur();
-                            couleur_choix.ShowDialog();
-                            color_check = 0;
-                            switch (couleur_choix.DialogResult)
-                            {
-                                case DialogResult.OK:
-                                    MessageBox.Show("Bleu !");
-                                    partie.Defausse[0].Carte_couleur = COULEUR.BLEU;
-                                    color_check = 1;
-                                    break;
-
-                                case DialogResult.Cancel:
-                                    MessageBox.Show("Rouge !");
-                                    partie.Defausse[0].Carte_couleur = COULEUR.ROUGE;
-                                    color_check = 1;
-                                    break;
-
-                                case DialogResult.Abort:
-                                    MessageBox.Show("jaune !");
-                                    partie.Defausse[0].Carte_couleur = COULEUR.JAUNE;
-                                    color_check = 1;
-                                    break;
-
-                                case DialogResult.Retry:
-                                    MessageBox.Show("Vert !");
-                                    partie.Defausse[0].Carte_couleur = COULEUR.VERT;
-                                    color_check = 1;
-                                    break;
-                            }
-                            turn();
-                        } while (color_check == 0);
-                    }
-                    else if (carteJoue.Carte_valeur == VALEUR.JOKER)
-                    {
-                        varpass = true;
-                        do
-                        {
-                            choix_couleur couleur_choix = new choix_couleur();
-                            couleur_choix.ShowDialog();
-                            color_check = 0;
-                            switch (couleur_choix.DialogResult)
-                            {
-                                case DialogResult.OK:
-                                    MessageBox.Show("Bleu !");
-                                    partie.Defausse[0].Carte_couleur = COULEUR.BLEU;
-                                    color_check = 1;
-                                    break;
-
-                                case DialogResult.Cancel:
-                                    MessageBox.Show("Rouge !");
-                                    partie.Defausse[0].Carte_couleur = COULEUR.ROUGE;
-                                    color_check = 1;
-                                    break;
-
-                                case DialogResult.Abort:
-                                    MessageBox.Show("jaune !");
-                                    partie.Defausse[0].Carte_couleur = COULEUR.JAUNE;
-                                    color_check = 1;
-                                    break;
-
-                                case DialogResult.Retry:
-                                    MessageBox.Show("Vert !");
-                                    partie.Defausse[0].Carte_couleur = COULEUR.VERT;
-                                    color_check = 1;
-                                    break;
-                            }
-                            turn();
-                        } while (color_check == 0);
-                    }
-                    turn();
-                }
-                else
-                {
-                    MessageBox.Show("Carte invalide");
-                    i = 1 - i;
-                }
-            }
-            if (partie.Joueurs[i].Main.Count == 1 && !uno1)
-            {
-                MessageBox.Show("Uno !");
-                uno1 = true;
-            }
-            else if (partie.Joueurs[i].Main.Count != 1)
-            {
-                uno1 = false;
-            }
-            if (partie.Joueurs[i].Main.Count == 0)
-            {
-                win(i);
-            }
-            i = 1 - i;
-            turn();
-        }
-
-        private void B_piocher1_Click(object sender, EventArgs e)
-        {
-            Carte cartePioche = partie.Pioche.paquet[0];
-            partie.Joueurs[i].Main.Add(cartePioche);
-            partie.Pioche.paquet.RemoveAt(0);
-            refresh_aff();
-            if (cartePioche.Carte_couleur == partie.Defausse[0].Carte_couleur || cartePioche.Carte_valeur == partie.Defausse[0].Carte_valeur || cartePioche.Carte_couleur == COULEUR.NOIR)
-            {
-                MessageBox.Show("Vous pouvez jouer à nouveau !");
-            }
-            else
-            {
-                MessageBox.Show("Vous ne pouvez pas jouer, passer votre tour !");
-                i = 1 - i;
-                turn();
-            }
-            mains_aff();
-        }
-
-        private void B_jouer2_Click(object sender, EventArgs e)
-        {
-            if (LB_Player2.SelectedItem != null)
-            {
-                Carte carteJoue = partie.Joueurs[1].Main[LB_Player2.SelectedIndex];
-                if (carteJoue.Carte_couleur == partie.Defausse[0].Carte_couleur || carteJoue.Carte_valeur == partie.Defausse[0].Carte_valeur || carteJoue.Carte_couleur == COULEUR.NOIR)
-                {
-                    partie.Defausse.Insert(0, carteJoue);
-                    partie.Joueurs[i].Main.RemoveAt(LB_Player2.SelectedIndex);
-                    refresh_aff();
-                    if (carteJoue.Carte_valeur == VALEUR.INVERS)
-                    {
-                        //i = 1 - i;
-                        varpass = true;
-                        turn();
-                    }
-                    else if (carteJoue.Carte_valeur == VALEUR.PASSE)
-                    {
-                        //i = 1 - i;
-                        varpass = true;
-                        turn();
-                    }
-                    else if (carteJoue.Carte_valeur == VALEUR.PLUS_DEUX)
-                    {
-                        //i = 1 - i;
-                        varpioche_2 = true;
-                        varpass = true;
-                        turn();
-                    }
-                    else if (carteJoue.Carte_valeur == VALEUR.PLUS_QUATRE)
-                    {
-                        //i = 1 - i;
-                        varpioche_4 = true;
-                        varpass = true;
-                        do
-                        {
-                            choix_couleur couleur_choix = new choix_couleur();
-                            couleur_choix.ShowDialog();
-                            color_check = 0;
-                            switch (couleur_choix.DialogResult)
-                            {
-                                case DialogResult.OK:
-                                    MessageBox.Show("Bleu !");
-                                    partie.Defausse[0].Carte_couleur = COULEUR.BLEU;
-                                    color_check = 1;
-                                    break;
-
-                                case DialogResult.Cancel:
-                                    MessageBox.Show("Rouge !");
-                                    partie.Defausse[0].Carte_couleur = COULEUR.ROUGE;
-                                    color_check = 1;
-                                    break;
-
-                                case DialogResult.Abort:
-                                    MessageBox.Show("jaune !");
-                                    partie.Defausse[0].Carte_couleur = COULEUR.JAUNE;
-                                    color_check = 1;
-                                    break;
-
-                                case DialogResult.Retry:
-                                    MessageBox.Show("Vert !");
-                                    partie.Defausse[0].Carte_couleur = COULEUR.VERT;
-                                    color_check = 1;
-                                    break;
-                            }
-                            turn();
-                        } while (color_check == 0);
-                    }
-                    else if (carteJoue.Carte_valeur == VALEUR.JOKER)
-                    {
-                        varpass = true;
-                        do
-                        {
-                            choix_couleur couleur_choix = new choix_couleur();
-                            couleur_choix.ShowDialog();
-                            color_check = 0;
-                            switch (couleur_choix.DialogResult)
-                            {
-                                case DialogResult.OK:
-                                    MessageBox.Show("Bleu !");
-                                    partie.Defausse[0].Carte_couleur = COULEUR.BLEU;
-                                    color_check = 1;
-                                    break;
-
-                                case DialogResult.Cancel:
-                                    MessageBox.Show("Rouge !");
-                                    partie.Defausse[0].Carte_couleur = COULEUR.ROUGE;
-                                    color_check = 1;
-                                    break;
-
-                                case DialogResult.Abort:
-                                    MessageBox.Show("jaune !");
-                                    partie.Defausse[0].Carte_couleur = COULEUR.JAUNE;
-                                    color_check = 1;
-                                    break;
-
-                                case DialogResult.Retry:
-                                    MessageBox.Show("Vert !");
-                                    partie.Defausse[0].Carte_couleur = COULEUR.VERT;
-                                    color_check = 1;
-                                    break;
-                            }
-                            turn();
-                        } while (color_check == 0);
-                    }
-                    turn();
-                }
-                else
-                {
-                    MessageBox.Show("Carte invalide");
-                    i = 1 - i;
-                }
-            }
-            if (partie.Joueurs[i].Main.Count == 1 && !uno2)
-            {
-                MessageBox.Show("Uno !");
-                uno2 = true;
-            }
-            else if (partie.Joueurs[i].Main.Count != 1)
-            {
-                uno2 = false;
-            }
-            if (partie.Joueurs[i].Main.Count == 0)
-            {
-                win(i);
-            }
-            i = 1 - i;
-            turn();
-        }
-
-        private void B_piocher2_Click(object sender, EventArgs e)
-        {
-            Carte cartePioche = partie.Pioche.paquet[0];
-            partie.Joueurs[i].Main.Add(cartePioche);
-            partie.Pioche.paquet.RemoveAt(0);
-            refresh_aff();
-            if (cartePioche.Carte_couleur == partie.Defausse[0].Carte_couleur || cartePioche.Carte_valeur == partie.Defausse[0].Carte_valeur || cartePioche.Carte_couleur == COULEUR.NOIR)
-            {
-                MessageBox.Show("Vous pouvez jouer à nouveau !");
-            }
-            else
-            {
-                MessageBox.Show("Vous ne pouvez pas jouer, passer votre tour !");
-                i = 1 - i;
-                turn();
-            }
-            mains_aff();
-        }
-
-        private void B_NP_Click(object sender, EventArgs e)
-        {
-            i = 0;
-            B_sauv.Enabled = true;
-            newgame();
-            turn();
-        }
-
-        private void refresh_aff()
-        {
-            LB_Deck.Items.Clear();
-            LB_defausse.Items.Clear();
-            LB_Player1.Items.Clear();
-            LB_Player2.Items.Clear();
-            foreach (Carte c in partie.Pioche.paquet)
-            {
-                LB_Deck.Items.Add(c.DisplayValue);
-            }
-            foreach (Carte c in partie.Joueurs[0].Main)
-            {
-                LB_Player1.Items.Add(c.DisplayValue);
-            }
-            foreach (Carte c in partie.Joueurs[1].Main)
-            {
-                LB_Player2.Items.Add(c.DisplayValue);
-            }
-            foreach (Carte c in partie.Defausse)
-            {
-                LB_defausse.Items.Add(c.DisplayValue);
-            }
-        }
-
-        private void mains_aff()
-        {
-            string LocaDom = System.AppDomain.CurrentDomain.BaseDirectory;
-            string FileName = string.Format("{0}Resources\\uno_assets_2d\\PNGs\\small\\", Path.GetFullPath(Path.Combine(LocaDom, @"..\..\")));
-            this.Panel_UNO.Controls.Clear();
-            Images_j1.Clear();
-            Images_j2.Clear();
-            Panel_UNO.Refresh();
-
-            PictureBox PBp = new PictureBox
-            {
-                Name = "PB_Pioche",
-                Location = new Point(PB_pioche.Location.X, PB_pioche.Location.Y),
-                Image = Image.FromFile(FileName + "DOS.png"),
-                Width = 100,
-                Height = 140,
-                SizeMode = PictureBoxSizeMode.StretchImage,
-                Visible = true
-            };
-            PBp.MouseClick += new MouseEventHandler(PB_click);
-            this.Panel_UNO.Controls.Add(PBp);
-
-            PictureBox PBd = new PictureBox
-            {
-                Name = "PB_Defausse",
-                Location = new Point(PB_defausse.Location.X, PB_defausse.Location.Y),
-                Image = Image.FromFile(FileName + partie.Defausse[0].DisplayValue + ".png"),
-                Width = 100,
-                Height = 140,
-                SizeMode = PictureBoxSizeMode.StretchImage,
-                Visible = true
-            };
-            this.Panel_UNO.Controls.Add(PBd);
-
-            if (i == 0)
-            {
-                int jou = 0;
-                foreach (Carte mainj1 in partie.Joueurs[0].Main)
-                {
-                    PictureBox PB = new PictureBox
-                    {
-                        Name = "PB_" + jou,
-                        Location = new Point(30 + (60 * jou), 490),
-                        Image = Image.FromFile(FileName + mainj1.DisplayValue + ".png"),
-                        Width = PB_pioche.Width,
-                        Height = PB_pioche.Height,
-                        SizeMode = PictureBoxSizeMode.StretchImage,
-                        Visible = true
-                    };
-                    PB.MouseClick += new MouseEventHandler(PB_click);
-                    Images_j1.Add(PB);
-                    this.Panel_UNO.Controls.Add(Images_j1[jou]);
-                    jou++;
-                }
-
-                jou = 0;
-                foreach (Carte mainj2 in partie.Joueurs[1].Main)
-                {
-                    PictureBox PB = new PictureBox
-                    {
-                        Name = "PB2_" + jou,
-                        Location = new Point(30 + (60 * jou), 0),
-                        Image = Image.FromFile(FileName + "DOS.png"),
-                        Width = PB_pioche.Width,
-                        Height = PB_pioche.Height,
-                        SizeMode = PictureBoxSizeMode.StretchImage,
-                        Visible = true
-                    };
-
-                    Images_j2.Add(PB);
-                    this.Panel_UNO.Controls.Add(Images_j2[jou]);
-                    jou++;
-                }
-            }
-            else
-            {
-                int jou = 0;
-                foreach (Carte mainj1 in partie.Joueurs[0].Main)
-                {
-                    PictureBox PB = new PictureBox
-                    {
-                        Name = "PB_" + jou,
-                        Location = new Point(30 + (60 * jou), 490),
-
-                        Image = Image.FromFile(FileName + "DOS.png"),
-
-                        Width = PB_pioche.Width,
-                        Height = PB_pioche.Height,
-                        SizeMode = PictureBoxSizeMode.StretchImage,
-                        Visible = true
-                    };
-                    Images_j1.Add(PB);
-                    this.Panel_UNO.Controls.Add(Images_j1[jou]);
-                    jou++;
-                }
-
-                jou = 0;
-                foreach (Carte mainj2 in partie.Joueurs[1].Main)
-                {
-                    PictureBox PB = new PictureBox
-                    {
-                        Name = "PB_" + jou,
-                        Location = new Point(30 + (60 * jou), 0),
-                        Image = Image.FromFile(FileName + mainj2.DisplayValue + ".png"),
-                        Width = PB_pioche.Width,
-                        Height = PB_pioche.Height,
-                        SizeMode = PictureBoxSizeMode.StretchImage,
-                        Visible = true
-                    };
-                    PB.MouseClick += new MouseEventHandler(PB_click);
-                    Images_j2.Add(PB);
-                    this.Panel_UNO.Controls.Add(Images_j2[jou]);
-                    jou++;
-                }
-            }
-        }
-
-        private void PB_click(object sender, EventArgs e)
-        {
-            var PB = (PictureBox)sender;
-            if (PB.Name == "PB_Pioche") //Carte dans pioche
-            {
-                if (i == 0)
-                {
-                    B_piocher1_Click(null, null);
-                }
-                else
-                {
-                    B_piocher2_Click(null, null);
-                }
-            }
-            else
-            {
-                string[] tab = PB.Name.Split('_');
-                if (i == 0)
-                {
-                    LB_Player1.SelectedIndex = int.Parse(tab[1]);
-                    PB.Top -= 30;
-                    DialogResult DG1 = MessageBox.Show("Vous souhaitez jouer le " + partie.Joueurs[0].Main[LB_Player1.SelectedIndex].Carte_valeur + " " + partie.Joueurs[0].Main[LB_Player1.SelectedIndex].Carte_couleur + "?", "choix", MessageBoxButtons.YesNo);
-                    if (DG1 == DialogResult.Yes)
-                    {
-                        B_jouer1_Click(null, null);
-                    }
-                }
-                else
-                {
-                    LB_Player2.SelectedIndex = int.Parse(tab[1]);
-                    PB.Top += 30;
-                    DialogResult DG2 = MessageBox.Show("Vous souhaitez jouer le " + partie.Joueurs[1].Main[LB_Player2.SelectedIndex].Carte_valeur + " " + partie.Joueurs[1].Main[LB_Player2.SelectedIndex].Carte_couleur + "?", "choix", MessageBoxButtons.YesNo);
-                    if (DG2 == DialogResult.Yes)
-                    {
-                        B_jouer2_Click(null, null);
-                    }
-                }
-            }
-            mains_aff();
-        }
-
-        private void PB_pioche_Click(object sender, EventArgs e)
-        {
-            newgame();
-        }
-
-        private void b_triche_Click(object sender, EventArgs e)
-        {
-            choix_carte_triche carte_choix = new choix_carte_triche(partie, this);
-            carte_choix.ShowDialog();
-            if (carteText == "")
-            {
-                MessageBox.Show("Aucune carte sélectionnée !");
-            }
-            else
-            {
-                try
-                {
-                    int index = LB_Deck.Items.IndexOf(carteText);
-                    Carte cartePioche = partie.Pioche.paquet[index];
-                    partie.Joueurs[i].Main.Add(cartePioche);
-                    partie.Pioche.paquet.RemoveAt(index);
-                    refresh_aff();
-                    if (cartePioche.Carte_couleur == partie.Defausse[0].Carte_couleur || cartePioche.Carte_valeur == partie.Defausse[0].Carte_valeur || cartePioche.Carte_couleur == COULEUR.NOIR)
-                    {
-                        MessageBox.Show("Vous pouvez jouer à nouveau !");
-                    }
-                    else
-                    {
-                        MessageBox.Show("Vous ne pouvez pas jouer, passer votre tour !");
-                        i = 1 - i;
-                        turn();
-                    }
-                    mains_aff();
-                    carteText = "";
-                }
-                catch
-                {
-                    MessageBox.Show("Erreur !");
-                }
-            }
-        }
-
-        public string carteText
-        {
-            get; set;
-        }
-
-        private void B_sauv_Click(object sender, EventArgs e)
-        {
-            if (saveFileDialog.ShowDialog() == DialogResult.OK)
-            {
-                StreamWriter sw = new StreamWriter(saveFileDialog.FileName);
-                sw.WriteLine(i);
-                sw.WriteLine("/");
-                foreach (Carte c in partie.Defausse)
-                {
-                    sw.WriteLine(c.Carte_couleur + "|" + c.Carte_valeur + "|" + c.Carte_score);
-                }
-                sw.WriteLine("/");
-                foreach (Carte c in partie.Joueurs[0].Main)
-                {
-                    sw.WriteLine(c.Carte_couleur + "|" + c.Carte_valeur + "|" + c.Carte_score);
-                }
-                sw.WriteLine("/");
-                foreach (Carte c in partie.Joueurs[1].Main)
-                {
-                    sw.WriteLine(c.Carte_couleur + "|" + c.Carte_valeur + "|" + c.Carte_score);
-                }
-                sw.WriteLine("/");
-                foreach (Carte c in partie.Pioche.paquet)
-                {
-                    sw.WriteLine(c.Carte_couleur + "|" + c.Carte_valeur + "|" + c.Carte_score);
-                }
-                sw.WriteLine("/");
-                sw.Close();
-            }
         }
 
         #region connexion au serveur
@@ -727,8 +41,18 @@ namespace GD_UNO_2021
         {
             if (TB_pseudo.Text.Length > 0)
             {
-                _clientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-                LoopConnect();
+                _serveur = AdresseValide(TB_IP.Text);
+                if (_serveur == null)
+                {
+                    MessageBox.Show("Adresse invalide !");
+                }
+                else
+                {
+                    _clientTCP = new TcpClient();
+                    Thread t = new Thread(LoopConnect);
+                    t.IsBackground = true;
+                    t.Start();
+                }
             }
             else
             {
@@ -738,17 +62,17 @@ namespace GD_UNO_2021
 
         private void LoopConnect()
         {
-            _clientSocket.Blocking = false;
+            B_connect.Enabled = false;
+            B_disconnect.Enabled = false;
             int attempts = 0;
-            while (!_clientSocket.Connected && attempts <= 20)
+            while (!_clientTCP.Connected && attempts <= 20)
             {
                 try
                 {
-                    Thread.Sleep(500);
                     attempts++;
                     IPAddress tmpIP = AdresseValide(TB_IP.Text);
                     if (tmpIP != null)
-                        _clientSocket.Connect(tmpIP, 9000);
+                        _clientTCP.Connect(_serveur, 9000);
                 }
                 catch (SocketException)
                 {
@@ -759,14 +83,49 @@ namespace GD_UNO_2021
             if (attempts <= 20)
             {
                 RTB_chat.AppendText("\nConnected!");
-                _clientSocket.BeginReceive(receivedBuf, 0, receivedBuf.Length, SocketFlags.None, new AsyncCallback(ReceiveData), _clientSocket);
-                byte[] buffer = Encoding.Unicode.GetBytes("@@" + TB_pseudo.Text);
-                _clientSocket.Send(buffer);
+                NetworkStream flux = _clientTCP.GetStream();
+                BinaryReader br = new BinaryReader(flux);
+                BinaryWriter bw = new BinaryWriter(flux);
+                bw.Write("@newClient@");
+                bw.Flush();
+                string com = br.ReadString();
+                RTB_chat.AppendText("\n" + com);
+                com = string.Join("", com.Split('@'));
+                switch (com)
+                {
+                    case "j1":
+                        RTB_chat.AppendText("\nVous êtes le joueur 1");
+                        joueur = "j1";
+                        QuiJoueTour = 1;
+                        this.Text = "Écran joueur 1";
+                        break;
+
+                    case "j2":
+                        RTB_chat.AppendText("\nVous êtes le joueur 2");
+                        joueur = "j2";
+                        QuiJoueTour = 1;
+                        this.Text = "Écran joueur 2";
+                        break;
+
+                    default:
+                        MessageBox.Show("Erreur ? " + com);
+                        break;
+                }
+                bw.Write(TB_pseudo.Text);
+                bw.Flush();
                 B_connect.Enabled = false;
+                Bconnect = true;
+                Thread t = new Thread(ListenServer);
+                t.Name = "ListenServ";
+                t.IsBackground = true;
+                t.Start(_clientTCP);
+                B_connect.Enabled = false;
+                B_disconnect.Enabled = true;
             }
             else
             {
                 RTB_chat.AppendText("\nServeur introuvale (+20 essais de connexion)!");
+                B_connect.Enabled = true;
             }
         }
 
@@ -795,55 +154,988 @@ namespace GD_UNO_2021
 
         #region gestion des paquets
 
-        private void ReceiveData(IAsyncResult ar)
+        private void ListenServer(object clientTCP)
         {
-            Socket socket = (Socket)ar.AsyncState;
-            int received;
+            TcpClient client = (TcpClient)clientTCP;
+            string input = string.Empty;
+            BinaryReader br = null;
+            BinaryWriter bw = null;
             try
             {
-                received = socket.EndReceive(ar);
-            }
-            catch (Exception)
-            {
-                return;
-            }
-            if (received != 0)
-            {
-                byte[] dataBuf = new byte[received];
-                Array.Copy(receivedBuf, dataBuf, received);
-                string text = Encoding.Unicode.GetString(dataBuf);
-                if (text == "@end")
+                br = new BinaryReader(client.GetStream());
+                bw = new BinaryWriter(client.GetStream());
+                while (client.Connected && Bconnect == true)
                 {
-                    RTB_chat.AppendText("\nFin de connexion serveur...");
-                    Disconnect();
+                    input = br.ReadString(); // stop ici en attendant un message
+                    input = string.Join("", input.Split('@'));
+                    switch (input)
+                    {
+                        case "distrib":
+                            {
+                                Paquet pqTmp = new Paquet();
+                                pqTmp.paquet = Deserialize(client.GetStream());
+                                foreach (Carte c in pqTmp.paquet)
+                                {
+                                    LB_Deck.Items.Add(c.DisplayValue);
+                                }
+                                partie.RefreshLan(pqTmp);
+                                RefreshLB();
+                                mains_aff_LAN(QuiJoueTour);
+                                break;
+                            }
+                        case "disco":
+                            {
+                                DisconnectFromServer(1);
+                                break;
+                            }
+                        case "msg":
+                            {
+                                string msg = br.ReadString();
+                                RTB_chat.Text += "\nMessage admin: " + msg;
+                                break;
+                            }
+                        case "advjoue":
+                            {
+                                Carte cTmp = new Carte();
+                                cTmp = DeserializeCard(client.GetStream());
+                                int SI = br.ReadInt32();
+                                if (joueur == "j1")
+                                {
+                                    RTB_chat.Text += "\n @j2play@:" + cTmp.DisplayValue;
+                                    if (cTmp.Carte_valeur == VALEUR.PLUS_DEUX)
+                                    {
+                                        RTB_chat.Text += "\nVous devez piochez 2 cartes !";
+                                        for (int j = 0; j < 2; j++)
+                                        {
+                                            Carte cartePioche = partie.Pioche.paquet[0];
+                                            partie.Joueurs[0].Main.Insert(0, cartePioche);
+                                            partie.Pioche.paquet.RemoveAt(0);
+                                        }
+                                        RTB_chat.Text += "\nVous devez passer votre tour !";
+                                        partie.Joueurs[1].Main.RemoveAt(SI);
+                                        QuiJoueTour = 2;
+                                        RefreshLB();
+                                        mains_aff_LAN(QuiJoueTour);
+                                    }
+                                    else if (cTmp.Carte_valeur == VALEUR.PLUS_QUATRE)
+                                    {
+                                        RTB_chat.Text += "\nVous devez piochez 4 cartes !";
+                                        for (int j = 0; j < 4; j++)
+                                        {
+                                            Carte cartePioche = partie.Pioche.paquet[0];
+                                            partie.Joueurs[0].Main.Insert(0, cartePioche);
+                                            partie.Pioche.paquet.RemoveAt(0);
+                                        }
+                                        RTB_chat.Text += "\nVous devez passer votre tour !";
+                                        partie.Joueurs[1].Main.RemoveAt(SI);
+                                        QuiJoueTour = 2;
+                                        RefreshLB();
+                                        mains_aff_LAN(QuiJoueTour);
+                                    }
+                                    else if (cTmp.Carte_valeur == VALEUR.INVERS || cTmp.Carte_valeur == VALEUR.PASSE)
+                                    {
+                                        RTB_chat.Text += "\nVous devez passer votre tour !";
+                                        partie.Joueurs[1].Main.RemoveAt(SI);
+                                        QuiJoueTour = 2;
+                                        RefreshLB();
+                                        mains_aff_LAN(QuiJoueTour);
+                                    }
+                                    else
+                                    {
+                                        partie.Joueurs[1].Main.RemoveAt(SI);
+                                        QuiJoueTour = 1;
+                                        RefreshLB();
+                                        mains_aff_LAN(QuiJoueTour);
+                                    }
+                                }
+                                else if (joueur == "j2")
+                                {
+                                    RTB_chat.Text += "\n @j1play@:" + cTmp.DisplayValue;
+                                    if (cTmp.Carte_valeur == VALEUR.PLUS_DEUX)
+                                    {
+                                        RTB_chat.Text += "Vous devez piochez 2 cartes !";
+                                        for (int j = 0; j < 2; j++)
+                                        {
+                                            Carte cartePioche = partie.Pioche.paquet[0];
+                                            partie.Joueurs[1].Main.Insert(0, cartePioche);
+                                            partie.Pioche.paquet.RemoveAt(0);
+                                        }
+                                        RTB_chat.Text += "Vous devez passer votre tour !";
+                                        partie.Joueurs[0].Main.RemoveAt(SI);
+                                        QuiJoueTour = 1;
+                                        RefreshLB();
+                                        mains_aff_LAN(QuiJoueTour);
+                                    }
+                                    else if (cTmp.Carte_valeur == VALEUR.PLUS_QUATRE)
+                                    {
+                                        RTB_chat.Text += "Vous devez piochez 4 cartes !";
+                                        for (int j = 0; j < 4; j++)
+                                        {
+                                            Carte cartePioche = partie.Pioche.paquet[0];
+                                            partie.Joueurs[1].Main.Insert(0, cartePioche);
+                                            partie.Pioche.paquet.RemoveAt(0);
+                                        }
+                                        RTB_chat.Text += "Vous devez passer votre tour !";
+                                        partie.Joueurs[0].Main.RemoveAt(SI);
+                                        QuiJoueTour = 1;
+                                        RefreshLB();
+                                        mains_aff_LAN(QuiJoueTour);
+                                    }
+                                    else if (cTmp.Carte_valeur == VALEUR.INVERS || cTmp.Carte_valeur == VALEUR.PASSE)
+                                    {
+                                        RTB_chat.Text += "Vous devez passer votre tour !";
+                                        partie.Joueurs[0].Main.RemoveAt(SI);
+                                        QuiJoueTour = 1;
+                                        RefreshLB();
+                                        mains_aff_LAN(QuiJoueTour);
+                                    }
+                                    else
+                                    {
+                                        partie.Joueurs[0].Main.RemoveAt(SI);
+                                        QuiJoueTour = 2;
+                                        RefreshLB();
+                                        mains_aff_LAN(QuiJoueTour);
+                                    }
+                                }
+                                partie.Defausse.Insert(0, cTmp);
+                                RefreshLB();
+                                break;
+                            }
+                        case "advpiocheNJ":
+                            {
+                                Carte cartePioche = partie.Pioche.paquet[0];
+                                if (joueur == "j1")
+                                {
+                                    partie.Joueurs[1].Main.Insert(0, cartePioche);
+                                    partie.Pioche.paquet.RemoveAt(0);
+                                    QuiJoueTour = 1;
+                                    RefreshLB();
+                                    mains_aff_LAN(QuiJoueTour);
+                                }
+                                else if (joueur == "j2")
+                                {
+                                    partie.Joueurs[0].Main.Insert(0, cartePioche);
+                                    partie.Pioche.paquet.RemoveAt(0);
+                                    QuiJoueTour = 2;
+                                    RefreshLB();
+                                    mains_aff_LAN(QuiJoueTour);
+                                }
+                                break;
+                            }
+                        case "advpiocheJ":
+                            {
+                                Carte cartePioche = partie.Pioche.paquet[0];
+                                if (joueur == "j1")
+                                {
+                                    partie.Joueurs[1].Main.Insert(0, cartePioche);
+                                    partie.Pioche.paquet.RemoveAt(0);
+                                    QuiJoueTour = 2;
+                                    RefreshLB();
+                                    mains_aff_LAN(QuiJoueTour);
+                                }
+                                else if (joueur == "j2")
+                                {
+                                    partie.Joueurs[0].Main.Insert(0, cartePioche);
+                                    partie.Pioche.paquet.RemoveAt(0);
+                                    QuiJoueTour = 1;
+                                    RefreshLB();
+                                    mains_aff_LAN(QuiJoueTour);
+                                }
+                                break;
+                            }
+                        case "perdu":
+                            {
+                                MessageBox.Show("Vous avez perdu la partie !");
+                                LB_Deck.Items.Clear();
+                                LB_defausse.Items.Clear();
+                                LB_MainJoueur.Items.Clear();
+                                LB_MainAdverse.Items.Clear();
+                                Images_main.Clear();
+                                Images_adv.Clear();
+                                Panel_UNO_LAN.Controls.Clear();
+                                this.Close();
+                                break;
+                            }
+                        case "win":
+                            {
+                                MessageBox.Show("Vous avez gagné ! (Abandon de l'adversaire)");
+                                aGagner = 1;
+                                DisconnectFromServer(aGagner);
+                                this.Close();
+                                break;
+                            }
+                        default:
+                            {
+                                break;
+                            }
+                    }
                 }
-                else
+            }
+            catch (Exception ex)
+            {
+                if (test == 1)
                 {
-                    RTB_chat.AppendText("\nServeur Admin: " + text);
-                    _clientSocket.BeginReceive(receivedBuf, 0, receivedBuf.Length, SocketFlags.None, new AsyncCallback(ReceiveData), _clientSocket);
+                    RTB_chat.AppendText("\nConnexion perdu avec le serveur ! " + ex.ToString());
+                    _clientTCP.Dispose();
+                    _clientTCP.Close();
+                    B_connect.Enabled = true;
+                    B_disconnect.Enabled = false;
                 }
             }
         }
 
-        private void Disconnect()
+        private Carte DeserializeCard(NetworkStream stream)
         {
-            _clientSocket.BeginDisconnect(false, new AsyncCallback(SurDemandeDeconnexion), _clientSocket);
+            BinaryFormatter bf = new BinaryFormatter();
+            return (Carte)bf.Deserialize(stream);
         }
 
-        private void SurDemandeDeconnexion(IAsyncResult iAR)
+        private List<Carte> Deserialize(NetworkStream stream)
         {
-            Socket Tmp = (Socket)iAR.AsyncState;
-            Tmp.EndDisconnect(iAR);
-            B_connect.Enabled = true;
+            BinaryFormatter bf = new BinaryFormatter();
+            return (List<Carte>)bf.Deserialize(stream);
         }
-        private void B_disconnect_Click(object sender, EventArgs e)
+
+        private static void SendSerial(NetworkStream stream, object obj)
         {
-            Disconnect();
-            RTB_chat.AppendText("\nDisconnected!");
+            BinaryFormatter bf = new BinaryFormatter();
+            bf.Serialize(stream, obj);
         }
 
         #endregion gestion des paquets
 
+        private void B_disconnect_Click(object sender, EventArgs e)
+        {
+            if(DisconnectFromServer(aGagner)==true)
+            {
+                this.Close();
+            }
+        }
 
+        private bool DisconnectFromServer(int i)
+        {
+            if (i == 0)
+            {
+                DialogResult DG = MessageBox.Show("Voulez vous vraiment Quitter (si une partie est en cours cela sera comptez comme un abandon) ?", "Choix", MessageBoxButtons.YesNo);
+                if (DG == DialogResult.Yes)
+                {
+                    NetworkStream NS = _clientTCP.GetStream();
+                    BinaryWriter bw = new BinaryWriter(NS);
+                    if (joueur == "j1")
+                    {
+                        bw.Write("@j1Ab@");
+                        bw.Flush();
+                    }
+                    else
+                    {
+                        bw.Write("@j2Ab@");
+                        bw.Flush();
+                    }
+                    test = 0;
+                    _clientTCP.Close();
+                    RTB_chat.AppendText("\nDisconnected from the server!");
+                    Bconnect = false;
+                    B_connect.Enabled = true;
+                    B_disconnect.Enabled = false;
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+            else
+            {
+                test = 0;
+                return true;
+            }
+        }
+
+        #region methode de jeu
+
+        private void RefreshLB()
+        {
+            LB_Deck.Items.Clear();
+            LB_defausse.Items.Clear();
+            LB_MainAdverse.Items.Clear();
+            LB_MainJoueur.Items.Clear();
+            partie.Joueurs[0].TrierMain();
+            partie.Joueurs[1].TrierMain();
+            if (joueur == "j1")
+            {
+                foreach (Carte c in partie.Joueurs[0].Main)
+                {
+                    LB_MainJoueur.Items.Add(c.DisplayValue);
+                }
+                foreach (Carte c in partie.Joueurs[1].Main)
+                {
+                    LB_MainAdverse.Items.Add(c.DisplayValue);
+                }
+            }
+            else if (joueur == "j2")
+            {
+                foreach (Carte c in partie.Joueurs[0].Main)
+                {
+                    LB_MainAdverse.Items.Add(c.DisplayValue);
+                }
+                foreach (Carte c in partie.Joueurs[1].Main)
+                {
+                    LB_MainJoueur.Items.Add(c.DisplayValue);
+                }
+            }
+            foreach (Carte c in partie.Pioche.paquet)
+            {
+                LB_Deck.Items.Add(c.DisplayValue);
+            }
+            foreach (Carte c in partie.Defausse)
+            {
+                LB_defausse.Items.Add(c.DisplayValue);
+            }
+        }
+
+        private void mains_aff_LAN(int QuiJoue)
+        {
+            this.BeginInvoke((MethodInvoker)delegate ()
+            {
+                string LocaDom = System.AppDomain.CurrentDomain.BaseDirectory;
+                string FileName = string.Format("{0}Resources\\uno_assets_2d\\PNGs\\small\\", Path.GetFullPath(Path.Combine(LocaDom, @"..\..\")));
+                Panel_UNO_LAN.Controls.Clear();
+                Images_main.Clear();
+                Images_adv.Clear();
+                Panel_UNO_LAN.Refresh();
+
+                PictureBox PBp = new PictureBox
+                {
+                    Name = "PB_Pioche",
+                    Location = new Point(PB_pioche.Location.X, PB_pioche.Location.Y),
+                    Image = Image.FromFile(FileName + "DOS.png"),
+                    Width = 100,
+                    Height = 140,
+                    SizeMode = PictureBoxSizeMode.StretchImage,
+                    Visible = true
+                };
+                PBp.MouseClick += new MouseEventHandler(PB_click);
+                Panel_UNO_LAN.Controls.Add(PBp);
+
+                PictureBox PBd = new PictureBox
+                {
+                    Name = "PB_Defausse",
+                    Location = new Point(PB_defausse.Location.X, PB_defausse.Location.Y),
+                    Image = Image.FromFile(FileName + partie.Defausse[0].DisplayValue + ".png"),
+                    Width = 100,
+                    Height = 140,
+                    SizeMode = PictureBoxSizeMode.StretchImage,
+                    Visible = true
+                };
+                Panel_UNO_LAN.Controls.Add(PBd);
+
+                if (joueur == "j1")
+                {
+                    int jou = 0;
+                    foreach (Carte mainJ in partie.Joueurs[0].Main)
+                    {
+                        if (QuiJoue == 1)
+                        {
+                            PictureBox PB = new PictureBox
+                            {
+                                Name = "PB1_" + jou,
+                                Location = new Point(30 + (60 * jou), 490),
+                                Image = Image.FromFile(FileName + mainJ.DisplayValue + ".png"),
+                                Width = PB_pioche.Width,
+                                Height = PB_pioche.Height,
+                                SizeMode = PictureBoxSizeMode.StretchImage,
+                                Visible = true,
+                                Enabled = true
+                            };
+                            PB.MouseClick += new MouseEventHandler(PB_click);
+                            Images_main.Add(PB);
+                            this.Panel_UNO_LAN.Controls.Add(Images_main[jou]);
+                            jou++;
+                        }
+                        else
+                        {
+                            PictureBox PB = new PictureBox
+                            {
+                                Name = "PB1_" + jou,
+                                Location = new Point(30 + (60 * jou), 490),
+                                Image = Image.FromFile(FileName + mainJ.DisplayValue + ".png"),
+                                Width = PB_pioche.Width,
+                                Height = PB_pioche.Height,
+                                SizeMode = PictureBoxSizeMode.StretchImage,
+                                Visible = true,
+                                Enabled = false
+                            };
+                            PB.MouseClick += new MouseEventHandler(PB_click);
+                            Images_main.Add(PB);
+                            this.Panel_UNO_LAN.Controls.Add(Images_main[jou]);
+                            jou++;
+                        }
+                    }
+
+                    jou = 0;
+                    foreach (Carte mainAd in partie.Joueurs[1].Main)
+                    {
+                        PictureBox PB = new PictureBox
+                        {
+                            Name = "PB2_" + jou,
+                            Location = new Point(30 + (60 * jou), 0),
+                            Image = Image.FromFile(FileName + "DOS.png"),
+                            Width = PB_pioche.Width,
+                            Height = PB_pioche.Height,
+                            SizeMode = PictureBoxSizeMode.StretchImage,
+                            Visible = true,
+                            Enabled = false
+                        };
+
+                        Images_adv.Add(PB);
+                        this.Panel_UNO_LAN.Controls.Add(Images_adv[jou]);
+                        jou++;
+                    }
+                }
+                else if (joueur == "j2")
+                {
+                    int jou = 0;
+                    foreach (Carte mainJ in partie.Joueurs[1].Main)
+                    {
+                        if (QuiJoue == 1)
+                        {
+                            PictureBox PB = new PictureBox
+                            {
+                                Name = "PB2_" + jou,
+                                Location = new Point(30 + (60 * jou), 490),
+                                Image = Image.FromFile(FileName + mainJ.DisplayValue + ".png"),
+                                Width = PB_pioche.Width,
+                                Height = PB_pioche.Height,
+                                SizeMode = PictureBoxSizeMode.StretchImage,
+                                Visible = true,
+                                Enabled = false
+                            };
+                            PB.MouseClick += new MouseEventHandler(PB_click);
+                            Images_main.Add(PB);
+                            this.Panel_UNO_LAN.Controls.Add(Images_main[jou]);
+                            jou++;
+                        }
+                        else
+                        {
+                            PictureBox PB = new PictureBox
+                            {
+                                Name = "PB2_" + jou,
+                                Location = new Point(30 + (60 * jou), 490),
+                                Image = Image.FromFile(FileName + mainJ.DisplayValue + ".png"),
+                                Width = PB_pioche.Width,
+                                Height = PB_pioche.Height,
+                                SizeMode = PictureBoxSizeMode.StretchImage,
+                                Visible = true,
+                                Enabled = true
+                            };
+                            PB.MouseClick += new MouseEventHandler(PB_click);
+                            Images_main.Add(PB);
+                            this.Panel_UNO_LAN.Controls.Add(Images_main[jou]);
+                            jou++;
+                        }
+                    }
+                    jou = 0;
+                    foreach (Carte mainAd in partie.Joueurs[0].Main)
+                    {
+                        PictureBox PB = new PictureBox
+                        {
+                            Name = "PB1_" + jou,
+                            Location = new Point(30 + (60 * jou), 0),
+                            Image = Image.FromFile(FileName + "DOS.png"),
+                            Width = PB_pioche.Width,
+                            Height = PB_pioche.Height,
+                            SizeMode = PictureBoxSizeMode.StretchImage,
+                            Visible = true
+                        };
+                        Images_adv.Add(PB);
+                        this.Panel_UNO_LAN.Controls.Add(Images_adv[jou]);
+                        jou++;
+                    }
+                }
+
+                if (QuiJoue == 1 && joueur == "j1")
+                {
+                    TB_tour.BackColor = Color.Green;
+                    TB_tour.Text = "C'est à vous de jouer !";
+                }
+                else if (QuiJoue == 2 && joueur == "j2")
+                {
+                    TB_tour.BackColor = Color.Green;
+                    TB_tour.Text = "C'est à vous de jouer !";
+                }
+                else
+                {
+                    TB_tour.BackColor = Color.Red;
+                    TB_tour.Text = "C'est au tour de l'adversaire !";
+                }
+            });
+        }
+
+        private void PB_click(object sender, MouseEventArgs e)
+        {
+            var PB = (PictureBox)sender;
+            if (PB.Name == "PB_Pioche") //Carte dans pioche
+            {
+                DialogResult DG = MessageBox.Show("Voulez vous vraiment piocher ?", "Choix", MessageBoxButtons.YesNo);
+                if (DG == DialogResult.Yes)
+                {
+                    if (QuiJoueTour == 1 && joueur == "j1")
+                    {
+                        Pioche_to_server(joueur);
+                    }
+                    else if (QuiJoueTour == 2 && joueur == "j2")
+                    {
+                        Pioche_to_server(joueur);
+                    }
+                    else
+                    {
+                        MessageBox.Show("Attendez votre tour pour piocher !");
+                    }
+                }
+            }
+            else
+            {
+                string[] tab = PB.Name.Split('_');
+                LB_MainJoueur.SelectedIndex = int.Parse(tab[1]);
+                PB.Top -= 30;
+                int o = 0;
+                if (joueur == "j1")
+                {
+                    o = 0;
+                }
+                else
+                {
+                    o = 1;
+                }
+                DialogResult DG = MessageBox.Show("Vous souhaitez jouer le " + partie.Joueurs[o].Main[LB_MainJoueur.SelectedIndex].Carte_valeur + " " + partie.Joueurs[o].Main[LB_MainJoueur.SelectedIndex].Carte_couleur + "?", "choix", MessageBoxButtons.YesNo);
+                if (DG == DialogResult.Yes)
+                {
+                    Joueur_to_server(joueur);
+                }
+            }
+            mains_aff_LAN(QuiJoueTour);
+        }
+
+        private void Joueur_to_server(string joueur)
+        {
+            NetworkStream NS = _clientTCP.GetStream();
+            BinaryWriter bw = new BinaryWriter(NS);
+            Carte carteJoue;
+            if (joueur == "j1")
+            {
+                carteJoue = partie.Joueurs[0].Main[LB_MainJoueur.SelectedIndex];
+                if (carteJoue.Carte_couleur == partie.Defausse[0].Carte_couleur || carteJoue.Carte_valeur == partie.Defausse[0].Carte_valeur || carteJoue.Carte_couleur == COULEUR.NOIR)
+                {
+                    switch (carteJoue.Carte_valeur)
+                    {
+                        case VALEUR.ZERO:
+                        case VALEUR.UN:
+                        case VALEUR.DEUX:
+                        case VALEUR.TROIS:
+                        case VALEUR.QUATRE:
+                        case VALEUR.CINQ:
+                        case VALEUR.SIX:
+                        case VALEUR.SEPT:
+                        case VALEUR.HUIT:
+                        case VALEUR.NEUF:
+                            {
+                                bw.Write("@j1play@");
+                                RTB_chat.Text += "\n @j1play@ :" + carteJoue.DisplayValue;
+                                bw.Flush();
+                                SendSerial(NS, carteJoue);
+                                _clientTCP.GetStream().Flush();
+                                QuiJoueTour = 2;
+                                break;
+                            }
+                        case VALEUR.PASSE:
+                        case VALEUR.INVERS:
+                            {
+                                bw.Write("@j1play@");
+                                RTB_chat.Text += "\n @j1play@ :" + carteJoue.DisplayValue;
+                                bw.Flush();
+                                SendSerial(NS, carteJoue);
+                                _clientTCP.GetStream().Flush();
+                                QuiJoueTour = 1;
+                                break;
+                            }
+                        case VALEUR.PLUS_DEUX:
+                            {
+                                bw.Write("@j1play@");
+                                RTB_chat.Text += "\n @j1play@ :" + carteJoue.DisplayValue;
+                                bw.Flush();
+                                SendSerial(NS, carteJoue);
+                                _clientTCP.GetStream().Flush();
+                                for (int j = 0; j < 2; j++)
+                                {
+                                    Carte cartePioche = partie.Pioche.paquet[0];
+                                    partie.Joueurs[1].Main.Insert(0, cartePioche);
+                                    partie.Pioche.paquet.RemoveAt(0);
+                                }
+                                QuiJoueTour = 1;
+                                break;
+                            }
+                        case VALEUR.PLUS_QUATRE:
+                            {
+                                bw.Write("@j1play@");
+                                bw.Flush();
+                                do
+                                {
+                                    choix_couleur couleur_choix = new choix_couleur();
+                                    couleur_choix.ShowDialog();
+                                    color_check = 0;
+                                    switch (couleur_choix.DialogResult)
+                                    {
+                                        case DialogResult.OK:
+                                            RTB_chat.Text += "Bleu !";
+                                            carteJoue.Carte_couleur = COULEUR.BLEU;
+                                            color_check = 1;
+                                            break;
+
+                                        case DialogResult.Cancel:
+                                            RTB_chat.Text += "Rouge !";
+                                            carteJoue.Carte_couleur = COULEUR.ROUGE;
+                                            color_check = 1;
+                                            break;
+
+                                        case DialogResult.Abort:
+                                            RTB_chat.Text += "jaune !";
+                                            carteJoue.Carte_couleur = COULEUR.JAUNE;
+                                            color_check = 1;
+                                            break;
+
+                                        case DialogResult.Retry:
+                                            RTB_chat.Text += "Vert !";
+                                            carteJoue.Carte_couleur = COULEUR.VERT;
+                                            color_check = 1;
+                                            break;
+                                    }
+                                } while (color_check == 0);
+                                SendSerial(NS, carteJoue);
+                                _clientTCP.GetStream().Flush();
+                                RTB_chat.Text += "\n @j1play@ :" + carteJoue.DisplayValue;
+                                color_check = 0;
+                                for (int j = 0; j < 4; j++)
+                                {
+                                    Carte cartePioche = partie.Pioche.paquet[0];
+                                    partie.Joueurs[1].Main.Insert(0, cartePioche);
+                                    partie.Pioche.paquet.RemoveAt(0);
+                                }
+                                QuiJoueTour = 1;
+                                break;
+                            }
+                        case VALEUR.JOKER:
+                            {
+                                bw.Write("@j1play@");
+                                bw.Flush();
+                                do
+                                {
+                                    choix_couleur couleur_choix = new choix_couleur();
+                                    couleur_choix.ShowDialog();
+                                    color_check = 0;
+                                    switch (couleur_choix.DialogResult)
+                                    {
+                                        case DialogResult.OK:
+                                            RTB_chat.Text += "Bleu !";
+                                            carteJoue.Carte_couleur = COULEUR.BLEU;
+                                            color_check = 1;
+                                            break;
+
+                                        case DialogResult.Cancel:
+                                            RTB_chat.Text += "Rouge !";
+                                            carteJoue.Carte_couleur = COULEUR.ROUGE;
+                                            color_check = 1;
+                                            break;
+
+                                        case DialogResult.Abort:
+                                            RTB_chat.Text += "jaune !";
+                                            carteJoue.Carte_couleur = COULEUR.JAUNE;
+                                            color_check = 1;
+                                            break;
+
+                                        case DialogResult.Retry:
+                                            RTB_chat.Text += "Vert !";
+                                            carteJoue.Carte_couleur = COULEUR.VERT;
+                                            color_check = 1;
+                                            break;
+                                    }
+                                } while (color_check == 0);
+                                SendSerial(NS, carteJoue);
+                                _clientTCP.GetStream().Flush();
+                                QuiJoueTour = 2;
+                                RTB_chat.Text += "\n @j1play@ :" + carteJoue.DisplayValue;
+                                color_check = 0;
+                                break;
+                            }
+                        default:
+                            RTB_chat.Text += "\n @j1play@ : erreur";
+                            break;
+                    }
+                    partie.Defausse.Insert(0, carteJoue);
+                    bw.Write(LB_MainJoueur.SelectedIndex);
+                    partie.Joueurs[0].Main.RemoveAt(LB_MainJoueur.SelectedIndex);
+                    RefreshLB();
+                    mains_aff_LAN(QuiJoueTour);
+                }
+                else
+                {
+                    RTB_chat.Text += " \n Carte invalide !";
+                }
+            }
+            else
+            {
+                carteJoue = partie.Joueurs[1].Main[LB_MainJoueur.SelectedIndex];
+                if (carteJoue.Carte_couleur == partie.Defausse[0].Carte_couleur || carteJoue.Carte_valeur == partie.Defausse[0].Carte_valeur || carteJoue.Carte_couleur == COULEUR.NOIR)
+                {
+                    switch (carteJoue.Carte_valeur)
+                    {
+                        case VALEUR.ZERO:
+                        case VALEUR.UN:
+                        case VALEUR.DEUX:
+                        case VALEUR.TROIS:
+                        case VALEUR.QUATRE:
+                        case VALEUR.CINQ:
+                        case VALEUR.SIX:
+                        case VALEUR.SEPT:
+                        case VALEUR.HUIT:
+                        case VALEUR.NEUF:
+                            {
+                                bw.Write("@j2play@");
+                                RTB_chat.Text += "\n @j2play@ :" + carteJoue.DisplayValue;
+                                bw.Flush();
+                                SendSerial(NS, carteJoue);
+                                _clientTCP.GetStream().Flush();
+                                QuiJoueTour = 1;
+                                break;
+                            }
+                        case VALEUR.PASSE:
+                        case VALEUR.INVERS:
+                            {
+                                bw.Write("@j2play@");
+                                RTB_chat.Text += "\n @j2play@ :" + carteJoue.DisplayValue;
+                                bw.Flush();
+                                SendSerial(NS, carteJoue);
+                                _clientTCP.GetStream().Flush();
+                                QuiJoueTour = 2;
+                                break;
+                            }
+                        case VALEUR.PLUS_DEUX:
+                            {
+                                bw.Write("@j2play@");
+                                RTB_chat.Text += "\n @j2play@ :" + carteJoue.DisplayValue;
+                                bw.Flush();
+                                SendSerial(NS, carteJoue);
+                                _clientTCP.GetStream().Flush();
+                                for (int j = 0; j < 2; j++)
+                                {
+                                    Carte cartePioche = partie.Pioche.paquet[0];
+                                    partie.Joueurs[0].Main.Insert(0, cartePioche);
+                                    partie.Pioche.paquet.RemoveAt(0);
+                                }
+                                QuiJoueTour = 2;
+                                break;
+                            }
+                        case VALEUR.PLUS_QUATRE:
+                            {
+                                bw.Write("@j2play@");
+                                bw.Flush();
+                                do
+                                {
+                                    choix_couleur couleur_choix = new choix_couleur();
+                                    couleur_choix.ShowDialog();
+                                    color_check = 0;
+                                    switch (couleur_choix.DialogResult)
+                                    {
+                                        case DialogResult.OK:
+                                            RTB_chat.Text += "Bleu !";
+                                            carteJoue.Carte_couleur = COULEUR.BLEU;
+                                            color_check = 1;
+                                            break;
+
+                                        case DialogResult.Cancel:
+                                            RTB_chat.Text += "Rouge !";
+                                            carteJoue.Carte_couleur = COULEUR.ROUGE;
+                                            color_check = 1;
+                                            break;
+
+                                        case DialogResult.Abort:
+                                            RTB_chat.Text += "jaune !";
+                                            carteJoue.Carte_couleur = COULEUR.JAUNE;
+                                            color_check = 1;
+                                            break;
+
+                                        case DialogResult.Retry:
+                                            RTB_chat.Text += "Vert !";
+                                            carteJoue.Carte_couleur = COULEUR.VERT;
+                                            color_check = 1;
+                                            break;
+                                    }
+                                } while (color_check == 0);
+                                SendSerial(NS, carteJoue);
+                                _clientTCP.GetStream().Flush();
+                                RTB_chat.Text += "\n @j2play@ :" + carteJoue.DisplayValue;
+                                color_check = 0;
+                                for (int j = 0; j < 4; j++)
+                                {
+                                    Carte cartePioche = partie.Pioche.paquet[0];
+                                    partie.Joueurs[0].Main.Insert(0, cartePioche);
+                                    partie.Pioche.paquet.RemoveAt(0);
+                                }
+                                QuiJoueTour = 2;
+                                break;
+                            }
+                        case VALEUR.JOKER:
+                            {
+                                bw.Write("@j2play@");
+                                bw.Flush();
+                                do
+                                {
+                                    choix_couleur couleur_choix = new choix_couleur();
+                                    couleur_choix.ShowDialog();
+                                    color_check = 0;
+                                    switch (couleur_choix.DialogResult)
+                                    {
+                                        case DialogResult.OK:
+                                            RTB_chat.Text += "Bleu !";
+                                            carteJoue.Carte_couleur = COULEUR.BLEU;
+                                            color_check = 1;
+                                            break;
+
+                                        case DialogResult.Cancel:
+                                            RTB_chat.Text += "Rouge !";
+                                            carteJoue.Carte_couleur = COULEUR.ROUGE;
+                                            color_check = 1;
+                                            break;
+
+                                        case DialogResult.Abort:
+                                            RTB_chat.Text += "jaune !";
+                                            carteJoue.Carte_couleur = COULEUR.JAUNE;
+                                            color_check = 1;
+                                            break;
+
+                                        case DialogResult.Retry:
+                                            RTB_chat.Text += "Vert !";
+                                            carteJoue.Carte_couleur = COULEUR.VERT;
+                                            color_check = 1;
+                                            break;
+                                    }
+                                } while (color_check == 0);
+                                SendSerial(NS, carteJoue);
+                                _clientTCP.GetStream().Flush();
+                                RTB_chat.Text += "\n @j2play@ :" + carteJoue.DisplayValue;
+                                color_check = 0;
+                                QuiJoueTour = 1;
+                                break;
+                            }
+                        default:
+                            RTB_chat.Text += "\n @j2play@ : erreur";
+                            break;
+                    }
+                    partie.Defausse.Insert(0, carteJoue);
+                    bw.Write(LB_MainJoueur.SelectedIndex);
+                    partie.Joueurs[1].Main.RemoveAt(LB_MainJoueur.SelectedIndex);
+                    RefreshLB();
+                    mains_aff_LAN(QuiJoueTour);
+                }
+                else
+                {
+                    RTB_chat.Text += " \n Carte invalide !";
+                }
+            }
+            _clientTCP.GetStream().Flush();
+            check_win();
+        }
+
+        private void check_win()
+        {
+            int o;
+            if (joueur == "j1")
+                o = 0;
+            else
+                o = 1;
+            if (partie.Joueurs[o].Main.Count == 0)
+            {
+                MessageBox.Show("Le Joueur " + (o + 1) + " gagne la partie !");
+                NetworkStream NS = _clientTCP.GetStream();
+                BinaryWriter bw = new BinaryWriter(NS);
+                bw.Write("@j" + (o + 1) + "win@");
+                bw.Flush();
+                this.Close();
+            }
+            else if(partie.Joueurs[0].Main.Count == 1)
+            {
+                RTB_chat.AppendText("\n@j1@: UNO!");
+            }
+            else if(partie.Joueurs[1].Main.Count == 1)
+            {
+                RTB_chat.AppendText("\n@j2@: UNO!");
+            }
+        }
+
+        private void Pioche_to_server(string joueur)
+        {
+            NetworkStream NS = _clientTCP.GetStream();
+            BinaryWriter bw = new BinaryWriter(NS);
+            Carte cartePioche = partie.Pioche.paquet[0];
+            if (joueur == "j1")
+            {
+                partie.Joueurs[0].Main.Insert(0, cartePioche);
+                if (cartePioche.Carte_couleur == partie.Defausse[0].Carte_couleur || cartePioche.Carte_valeur == partie.Defausse[0].Carte_valeur || cartePioche.Carte_couleur == COULEUR.NOIR)
+                {
+                    bw.Write("@j1piocheJ@");
+                    bw.Flush();
+                    RTB_chat.Text += " \n Vous pouvez jouer à nouveau !";
+                    partie.Pioche.paquet.RemoveAt(0);
+                    QuiJoueTour = 1;
+                    RefreshLB();
+                    mains_aff_LAN(QuiJoueTour);
+                }
+                else
+                {
+                    bw.Write("@j1piocheNJ@");
+                    bw.Flush();
+                    partie.Pioche.paquet.RemoveAt(0);
+                    QuiJoueTour = 2;
+                    RefreshLB();
+                    mains_aff_LAN(QuiJoueTour);
+                }
+            }
+            else if (joueur == "j2")
+            {
+                partie.Joueurs[1].Main.Insert(0, cartePioche);
+                if (cartePioche.Carte_couleur == partie.Defausse[0].Carte_couleur || cartePioche.Carte_valeur == partie.Defausse[0].Carte_valeur || cartePioche.Carte_couleur == COULEUR.NOIR)
+                {
+                    bw.Write("@j2piocheJ@");
+                    bw.Flush();
+                    RTB_chat.Text += " \n Vous pouvez jouer à nouveau !";
+                    partie.Pioche.paquet.RemoveAt(0);
+                    QuiJoueTour = 2;
+                    RefreshLB();
+                    mains_aff_LAN(QuiJoueTour);
+                }
+                else
+                {
+                    bw.Write("@j2piocheNJ@");
+                    bw.Flush();
+                    partie.Pioche.paquet.RemoveAt(0);
+                    QuiJoueTour = 1;
+                    RefreshLB();
+                    mains_aff_LAN(QuiJoueTour);
+                }
+            }
+            _clientTCP.GetStream().Flush();
+        }
+
+        #endregion methode de jeu
+
+        private void EcranTerrain_LAN_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            if (this.Text == "j1" || this.Text == "j2")
+            {
+                if (DisconnectFromServer(aGagner) == false)
+                {
+                    e.Cancel = true;
+                }
+            }
+        }
     }
 }

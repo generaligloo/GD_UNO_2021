@@ -21,8 +21,10 @@ namespace GD_UNO_2021
 
         private void B_NP_Click(object sender, EventArgs e)
         {
+            this.Hide();
             EcranTerrain NP = new EcranTerrain();
             NP.ShowDialog();
+            this.Show();
         }
 
         private void B_charger_Click(object sender, EventArgs e)
@@ -75,14 +77,18 @@ namespace GD_UNO_2021
 
         private void B_serveur_Click(object sender, EventArgs e)
         {
+            this.Hide();
             EcranServ Serv = new EcranServ();
             Serv.ShowDialog();
+            this.Show();
         }
 
         private void B_joueur_Click(object sender, EventArgs e)
         {
+            this.Hide();
             EcranTerrain_LAN TL = new EcranTerrain_LAN();
             TL.ShowDialog();
+            this.Show();
         }
     }
 }
